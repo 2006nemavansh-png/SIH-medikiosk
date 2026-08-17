@@ -10,10 +10,26 @@
   (backend, algorithms, ingestion) will build on top of it.
 
 ## Phase 0 — Internal Round (pitch-first, no full build)
-- No individually-critical Phase 0 deliverable — this phase is dominated by
-  the pitch/deck work (R1) and algorithm/mockup screenshots (Vansh/Arush, R5).
-  Use this window to get the repo, Docker, and CI scaffolding in place so
+- Use this window to get the repo, Docker, and CI scaffolding in place so
   Phase 1 doesn't stall on infra day one.
+- **Research work: back the pitch with facts.** The deck currently asserts the
+  differentiator (pooling + empty-backhaul) without hard evidence. Gather the
+  supporting material that makes the claim credible to judges, not just
+  plausible:
+  - Why prior direct-to-market platforms (eNAM, DeHaat, Ninjacart, WayCool,
+    Agribazaar) struggled with smallholder aggregation/logistics — cite
+    sources, not just the one-line summary in memory.md
+  - Empty-backhaul / return-leg economics in Indian trucking — rough numbers
+    on how much dead-leg capacity exists and what it typically costs vs.
+    dedicated hire
+  - Smallholder farmgate-to-market price loss — data on how much margin
+    middlemen actually capture, to quantify the problem statement
+  - Any existing pilot/study data on truck pooling for agri produce, even
+    outside India, as precedent
+  - Package findings as a short backing doc (or annotated slide notes) R1 can
+    pull from directly for the deck and judge Q&A
+  This is separate from the security threat-model research, which stays
+  unassigned pending the 6th-member/security-ownership decision.
 
 ## Phase 1 — Post-Qualification Build
 
