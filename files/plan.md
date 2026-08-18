@@ -3,6 +3,10 @@
 > Read `memory.md` first for context and reasoning. This file is the
 > implementation plan.
 
+> **CURRENT FOCUS: Phase 0 only.** We're pre-qualification for the internal
+> round. Everything under Phase 1/2 is reference for later — don't build it
+> yet.
+
 ---
 
 ## 1. Architecture
@@ -288,10 +292,11 @@ teams will have one.
 | # | Action | Owner |
 |---|---|---|
 | 1 | **Verify soil data resolution** (SHC/NBSS). If taluka-level, reframe provenance claim as district-level in the pitch | Ditya |
-| 2 | Fix truck assignment tracking in backhaul matcher | Arush |
+| 2 | Fix truck assignment tracking in backhaul matcher | Vansh |
 | 3 | Wire compatibility matrix into pool clusterer (replace `crop_type ==`) | Vansh |
-| 4 | Repo scaffold, Docker, `.env`/`.gitignore`, CI | Parth |
-| 5 | Confirm 6th member; assign security + pitch ownership | Team |
+| 4 | Expand Crop Compatibility Matrix data & consult on data ingestion | Arush |
+| 5 | Repo scaffold, Docker, `.env`/`.gitignore`, CI | Parth |
+| 6 | Confirm 6th member; assign security + pitch ownership | Team |
 
 ---
 

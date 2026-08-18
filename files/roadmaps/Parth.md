@@ -2,6 +2,9 @@
 
 **Owns:** DevOps (solo, front-loaded) — #8 (easiest, one-time setup cost) on the team's difficulty ranking, but you'll have spare capacity within days and are slated to move onto mobile after.
 
+> **CURRENT FOCUS: Phase 0 only.** Skip straight to that section below —
+> Phase 1/2 is post-qualification, not now.
+
 ---
 
 ## Immediate next action

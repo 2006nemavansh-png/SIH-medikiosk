@@ -3,14 +3,13 @@
 **Owns:** Algorithms (with Vansh) · Data Ingestion (with Ditya, consulting role)
 **Difficulty of your components:** #1 (Algorithms, hardest) and #2 (Data Ingestion) on the team's ranking. You sit on both halves of the critical path — Ditya's ingestion work blocks your algorithm work, so you are serially exposed to any slip upstream.
 
+> **CURRENT FOCUS: Phase 0 only.** Skip straight to that section below —
+> Phase 1/2 is post-qualification, not now.
+
 ---
 
 ## Immediate next action
-- **Fix truck assignment tracking in the backhaul matcher.** This is a known,
-  already-observed bug: in the notebook's §5 output, truck T1 matches to both
-  Pool 1 and Pool 2 simultaneously. It's currently a toy-example artifact, but
-  it **must** be fixed with proper assignment tracking (a matched truck drops
-  out of the candidate pool) before this is ever demoed.
+- **Expand the Crop Compatibility Matrix & consult on data ingestion.** The algorithms need a rich dataset of 15-20 common Indian crops with their ethylene sensitivity, odour, and temperature bands. Build out this dictionary (expanding on notebook §11) so Vansh's pooling algorithm has real data to consume. Continue helping Ditya unblock data ingestion.
 
 ## Phase 0 — Internal Round (pitch-first, no full build)
 - Support Vansh in getting the pooling + sourcing algorithms running on seeded
@@ -22,8 +21,7 @@
 ### Track B — Algorithms (with Vansh)
 1. Pool clusterer + crop compatibility matrix (§11) wired in — replaces `crop_type ==`
 2. Time-window dispatch logic (capacity threshold OR shelf-life deadline)
-3. **Backhaul matcher with truck assignment tracking** — your fix from above,
-   now built out properly and tested against multi-pool scenarios
+3. **Expand Crop Compatibility Data Dictionary** — provide the detailed data required for the pool clusterer.
 4. Sourcing ranker and plan bundling — support role, Vansh leads
 5. Expose algorithm endpoints for backend consumption
 

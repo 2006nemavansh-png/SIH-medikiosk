@@ -3,6 +3,9 @@
 **Owns:** Mobile App + Web Dashboard (solo) — the largest single-person code volume on the team.
 **Difficulty of your components:** #5 (Mobile, moderate) and #6 (Web Dashboard, moderate-easy, highest visual payoff per hour) on the team's ranking — lower conceptual difficulty than algorithms/ingestion, but high volume, and you're carrying two tracks alone.
 
+> **CURRENT FOCUS: Phase 0 only.** Skip straight to that section below —
+> Phase 1/2 is post-qualification, not now.
+
 ---
 
 ## Immediate next action

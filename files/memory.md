@@ -5,6 +5,10 @@
 > they were — the reasoning matters more than the conclusions when things need
 > to change.
 
+> **CURRENT FOCUS: Phase 0 only.** We haven't qualified out of the internal
+> round yet — no backend, no full mobile app, no real infra. Deck + seeded
+> algorithm screenshots + mockups + nav shell only.
+
 ---
 
 ## What we're building

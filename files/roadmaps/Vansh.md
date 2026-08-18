@@ -3,6 +3,9 @@
 **Owns:** Algorithms (with Arush) · Backend (with Ditya) · Voice/Translation (with Ditya)
 **Difficulty of your components:** #1 (Algorithms, hardest) and #3 (Backend, hard) on the team's ranking — you're on the critical path.
 
+> **CURRENT FOCUS: Phase 0 only.** Skip straight to that section below —
+> Phase 1/2 is post-qualification, not now.
+
 ---
 
 ## Immediate next action
@@ -12,6 +15,7 @@
   constraints are physical (ethylene emitters like banana/apple/tomato ripen
   sensitive produce; onion/garlic taint mild produce; temperature bands
   differ). This is also a strong domain-knowledge signal for judges.
+- **Fix truck assignment tracking in the backhaul matcher** — current toy version lets one truck match two pools simultaneously; this is a known bug, fix before any demo.
 
 ## Phase 0 — Internal Round (pitch-first, no full build)
 - Help get the pooling + sourcing algorithms running on **seeded data**
@@ -27,7 +31,7 @@
 ### Track B — Algorithms
 1. Pool clusterer with crop compatibility matrix wired in (your immediate task above)
 2. Time-window dispatch: fire pool at capacity threshold OR crop-specific shelf-life deadline, whichever comes first — even at partial load
-3. Backhaul matcher **with truck assignment tracking** — current toy version lets one truck match two pools simultaneously; this is a known bug, fix before any demo (Arush owns this specifically, but you'll be building alongside)
+3. Backhaul matcher **with truck assignment tracking** — current toy version lets one truck match two pools simultaneously; this is a known bug, fix before any demo.
 4. Sourcing ranker: `score = 0.40·cost + 0.20·soil + 0.15·reliability + 0.10·freshness + 0.15·pool_synergy`
    - Rank on **landed cost** (ask + freight), not asking price — this is the core insight that makes the sourcing algorithm and logistics engine one system
    - Don't drop `pool_synergy` in refactoring — it's the mechanical link between pooling and sourcing

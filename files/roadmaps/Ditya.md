@@ -3,6 +3,9 @@
 **Owns:** Data Ingestion (with Arush) · Backend (with Vansh) · Voice/Translation (with Vansh)
 **Difficulty of your components:** #2 (Data Ingestion) on the team's ranking — "very hard and universally underestimated." You're on the critical path.
 
+> **CURRENT FOCUS: Phase 0 only.** Skip straight to that section below —
+> Phase 1/2 is post-qualification, not now.
+
 ---
 
 ## Immediate next action

@@ -5,6 +5,9 @@
 **Current state:** Nothing built
 **Immediate target:** Internal college round → then Grand Finale
 
+> **CURRENT FOCUS: Phase 0 only.** Pre-qualification. Phase 1/2 sections below
+> are reference for later, not active work.
+
 ---
 
 ## Strategic Framing (read this first)
