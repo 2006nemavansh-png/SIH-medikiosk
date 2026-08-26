@@ -1,0 +1,44 @@
+/* Common theme — Manya: skin this however the kiosk UI should look.
+   Every screen links this file so changes here apply everywhere. */
+
+:root {
+  --primary: #0f766e;
+  --bg: #f8fafc;
+  --text: #0f172a;
+  --card-radius: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.screen {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+button.primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--card-radius);
+  padding: 16px 24px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}

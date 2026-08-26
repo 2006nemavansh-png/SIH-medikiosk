@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MediKiosk — Documents</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<script src="../shared/state.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <div class="screen">
+    <h2>Scan your prior prescriptions / reports</h2>
+    <!-- Arush: replace with real upload UI + extraction of diagnosis/meds/lab
+         values from the OCR text (regex/keyword matching is fine for the demo).
+         Sample images to test against go in ../assets/sample-docs/ -->
+    <div class="card">
+      <input type="file" id="docInput" accept="image/*" />
+      <button class="primary" onclick="scan()">Scan document</button>
+      <p id="status"></p>
+      <pre id="ocrText"></pre>
+    </div>
+    <button class="primary" onclick="submit()">Continue</button>
+  </div>
+  <script>
+    let lastText = '';
+
+    async function scan() {
+      const file = document.getElementById('docInput').files[0];
+      if (!file) { alert('Choose an image first'); return; }
+      document.getElementById('status').textContent = 'Scanning...';
+      const { data } = await Tesseract.recognize(file, 'eng');
+      lastText = data.text;
+      document.getElementById('ocrText').textContent = lastText;
+      document.getElementById('status').textContent = 'Done';
+    }
+
+    function submit() {
+      const patient = getPatient();
+      const documents = patient.documents || [];
+      documents.push({ type: 'unknown', extractedText: lastText, fields: {} });
+      updatePatient({ documents });
+      location.href = '../module-c-summary/index.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MediKiosk — Physician Summary</title>
+<link rel="stylesheet" href="../shared/style.css" />
+<script src="../shared/state.js"></script>
+</head>
+<body>
+  <div class="screen">
+    <h2>Physician-Ready Summary</h2>
+    <!-- Vansh: this is the glue step. Take patient.history (Module A) and
+         patient.documents (Module B) and template-fill the sections below.
+         No real AI needed for the demo — just slot the fields in. -->
+    <div class="card" id="summary"></div>
+  </div>
+  <script>
+    const patient = getPatient();
+    const h = patient.history || {};
+    const docs = patient.documents || [];
+
+    document.getElementById('summary').innerHTML = `
+      <p><strong>Chief Complaint:</strong> ${h.chiefComplaint || '-'}</p>
+      <p><strong>HPI:</strong> ${h.hpi || '-'}</p>
+      <p><strong>Past Medical/Surgical:</strong> ${h.pastHistory || '-'}</p>
+      <p><strong>Drug & Allergy:</strong> ${h.drugAllergy || '-'}</p>
+      <p><strong>Family:</strong> ${h.family || '-'}</p>
+      <p><strong>Personal:</strong> ${h.personal || '-'}</p>
+      <p><strong>Review of Systems:</strong> ${h.ros || '-'}</p>
+      <p><strong>Prior Documents:</strong> ${docs.length} scanned</p>
+      ${docs.map(d => `<pre>${d.extractedText}</pre>`).join('')}
+    `;
+  </script>
+</body>
+</html>
