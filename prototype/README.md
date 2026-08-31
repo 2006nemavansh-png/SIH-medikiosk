@@ -15,6 +15,7 @@ no backend, no database, for demo purposes only.
 - **Arush** — `module-b-documents/` (OCR upload/scan, field extraction)
 - **Vansh** — `module-c-summary/` (merges A + B into the physician summary)
 - **Manya** — `shared/style.css` and overall look/feel across all screens
+- **Parth** — research (competitive landscape, ABDM/DPDPA compliance, feasibility) — not building prototype code
 
 Put test images for OCR in `assets/sample-docs/` (create the folder — not committed yet).
 

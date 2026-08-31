@@ -5,6 +5,7 @@
 <title>MediKiosk — Physician Summary</title>
 <link rel="stylesheet" href="../shared/style.css" />
 <script src="../shared/state.js"></script>
+<script src="../shared/sample-data.js"></script>
 </head>
 <body>
   <div class="screen">
@@ -12,24 +13,54 @@
     <!-- Vansh: this is the glue step. Take patient.history (Module A) and
          patient.documents (Module B) and template-fill the sections below.
          No real AI needed for the demo — just slot the fields in. -->
+    <button onclick="loadSample()">Load sample data (dev only, stands in for A + B)</button>
     <div class="card" id="summary"></div>
+    <button class="primary" onclick="confirmSummary()">Confirm & Save</button>
+    <p id="confirmMsg"></p>
   </div>
   <script>
-    const patient = getPatient();
-    const h = patient.history || {};
-    const docs = patient.documents || [];
+    const FIELDS = [
+      ['chiefComplaint', 'Chief Complaint'],
+      ['hpi', 'HPI'],
+      ['pastHistory', 'Past Medical/Surgical'],
+      ['drugAllergy', 'Drug & Allergy'],
+      ['family', 'Family'],
+      ['personal', 'Personal'],
+      ['ros', 'Review of Systems']
+    ];
 
-    document.getElementById('summary').innerHTML = `
-      <p><strong>Chief Complaint:</strong> ${h.chiefComplaint || '-'}</p>
-      <p><strong>HPI:</strong> ${h.hpi || '-'}</p>
-      <p><strong>Past Medical/Surgical:</strong> ${h.pastHistory || '-'}</p>
-      <p><strong>Drug & Allergy:</strong> ${h.drugAllergy || '-'}</p>
-      <p><strong>Family:</strong> ${h.family || '-'}</p>
-      <p><strong>Personal:</strong> ${h.personal || '-'}</p>
-      <p><strong>Review of Systems:</strong> ${h.ros || '-'}</p>
-      <p><strong>Prior Documents:</strong> ${docs.length} scanned</p>
-      ${docs.map(d => `<pre>${d.extractedText}</pre>`).join('')}
-    `;
+    function render() {
+      const patient = getPatient();
+      const h = patient.history || {};
+      const docs = patient.documents || [];
+
+      document.getElementById('summary').innerHTML = `
+        ${FIELDS.map(([key, label]) => `
+          <p><strong>${label}:</strong>
+            <span contenteditable="true" data-field="${key}">${h[key] || ''}</span>
+          </p>
+        `).join('')}
+        <p><strong>Prior Documents:</strong> ${docs.length} scanned</p>
+        ${docs.map(d => `<pre>${d.extractedText}</pre>`).join('')}
+      `;
+      document.getElementById('confirmMsg').textContent = '';
+    }
+
+    function confirmSummary() {
+      const history = {};
+      document.querySelectorAll('[data-field]').forEach(el => {
+        history[el.dataset.field] = el.textContent.trim();
+      });
+      updatePatient({ history, summaryConfirmed: true });
+      document.getElementById('confirmMsg').textContent = 'Saved — physician has confirmed this history.';
+    }
+
+    function loadSample() {
+      updatePatient(SAMPLE_PATIENT);
+      render();
+    }
+
+    render();
   </script>
 </body>
 </html>
