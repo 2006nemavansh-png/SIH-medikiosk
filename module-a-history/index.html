@@ -1,0 +1,2161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediKiosk — Conversational Clinical History</title>
+  <link rel="stylesheet" href="../shared/style.css" />
+  <script src="../shared/state.js"></script>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-light: #ccfbf1;
+      --accent: #0284c7;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .kiosk-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kiosk-branding {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kiosk-logo-badge {
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .toggles-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lang-switcher {
+      display: flex;
+      background: #e2e8f0;
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: white;
+      color: var(--primary-dark);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .pill-btn {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .pill-btn.ayush-active {
+      background: #b45309;
+      color: white;
+      border-color: #b45309;
+    }
+
+    /* Progress Tracker */
+    .progress-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Red Flag Alert Banner */
+    .alert-banner {
+      display: none;
+      background: var(--danger-bg);
+      border: 2px solid var(--danger);
+      color: #991b1b;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+
+    .alert-banner.visible {
+      display: block;
+    }
+
+    .alert-banner-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .alert-banner-body {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.1); }
+    }
+
+    /* Wizard Card */
+    .wizard-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 380px;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .question-title {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .question-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .audio-prompt-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .audio-prompt-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Chip Selection Grid */
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip-btn {
+      background: #f8fafc;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .chip-btn:hover {
+      border-color: var(--primary);
+      background: #f0fdfa;
+    }
+
+    .chip-btn.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+      box-shadow: 0 2px 6px rgba(15, 118, 110, 0.15);
+    }
+
+    .chip-btn.danger-chip.selected {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* Voice Input Box */
+    .voice-section {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .voice-control-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mic-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .mic-btn.listening {
+      background: var(--danger);
+      animation: micPulse 1.5s infinite;
+    }
+
+    @keyframes micPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+      70% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+      100% { transform: scale(1); }
+    }
+
+    .voice-status {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .text-input-field {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 15px;
+      box-sizing: border-box;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .text-input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .ai-badge {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Severity Slider */
+    .severity-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .severity-slider {
+      width: 100%;
+      height: 8px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* Review Card Elements */
+    .review-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .review-item {
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .review-item strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .review-item p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    .btn {
+      padding: 14px 26px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* Triage Badge */
+    .triage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid #fca5a5;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="kiosk-container">
+    
+    <!-- Top Header / Bar -->
+    <div class="top-bar">
+      <div class="kiosk-branding">
+        <span class="kiosk-logo-badge">MediKiosk</span>
+        <span style="font-weight: 600; font-size: 15px;" id="headerSubTitle">Module A: Clinical Intake</span>
+      </div>
+
+      <div class="toggles-group">
+        <!-- Language Switcher: Segmented Control -->
+        <div class="lang-switcher">
+          <button id="langBtnEn" class="lang-btn active" onclick="setLanguage('en')">English</button>
+          <button id="langBtnHi" class="lang-btn" onclick="setLanguage('hi')">हिंदी</button>
+        </div>
+
+        <!-- AYUSH Mode Switcher -->
+        <button id="ayushToggleBtn" class="pill-btn" onclick="toggleAyushMode()">
+          🌿 <span id="ayushLabel">Allopathy Mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-card">
+      <div class="progress-header">
+        <span id="stepTitle">Step 1</span>
+        <span id="stepCount">1 of 7</span>
+      </div>
+      <div class="progress-bar-track">
+        <div id="progressBar" class="progress-bar-fill" style="width: 14%;"></div>
+      </div>
+    </div>
+
+    <!-- Red-Flag Emergency Banner -->
+    <div id="alertBanner" class="alert-banner">
+      <div class="alert-banner-header">
+        🚨 <span id="alertBannerTitle">EMERGENCY PRIORITY DETECTED</span>
+        <span class="triage-badge">TRIAGE: HIGH</span>
+      </div>
+      <div id="alertBannerText" class="alert-banner-body">
+        Symptoms indicate potential high-risk condition. Hospital triage staff will be alerted immediately.
+      </div>
+    </div>
+
+    <!-- Main Wizard Dynamic Card -->
+    <div class="wizard-card" id="wizardCard">
+      <!-- Injected dynamically via JS -->
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+      <button id="prevBtn" class="btn btn-secondary" onclick="prevStep()" style="display: none;">
+        ← <span id="prevBtnText">Back</span>
+      </button>
+      <div style="flex: 1;"></div>
+      <button id="nextBtn" class="btn btn-primary" onclick="nextStep()">
+        <span id="nextBtnText">Next</span> →
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================================
+    // SEMANTIC STATE (Language-independent IDs)
+    // ==========================================================
+    let currentLanguage = 'en'; // 'en' or 'hi'
+    let isAyushMode = false;
+    let currentStep = 0;
+    let isListening = false;
+    let speechRecognition = null;
+
+    const intakeState = {
+      chiefComplaint: '', // 'fever', 'chest_pain', 'abdominal_pain', etc.
+      customComplaint: '', // text in current language
+      customComplaintEn: '', // English version of typed/spoken complaint
+      customComplaintHi: '', // Hindi version of typed/spoken complaint
+      aiDetectedLabel: '', // visual feedback label
+      socrates: {
+        duration: '', // 'few_hours', '1_2_days', '1_week', '1_month', 'sudden'
+        character: '', // 'dull', 'sharp', 'burning', 'crushing', 'throbbing', 'cramping'
+        radiation: '', // 'none', 'left_arm', 'jaw_neck', 'back', 'abdomen'
+        associations: [], // ['sweating', 'nausea', 'breathless', 'dizziness', 'fever_assoc', 'palpitations']
+        severity: 5
+      },
+      pastHistory: [],
+      pastHistoryOther: '',
+      drugAllergy: [],
+      drugAllergyOther: '',
+      dailyMedications: '',
+      familyHistory: [],
+      lifestyle: {
+        smoking: 'non_smoker',
+        alcohol: 'non_drinker',
+        diet: 'vegetarian'
+      },
+      ros: [],
+      ayush: {
+        agni: '',
+        ahara: '',
+        prakriti: '',
+        koshtha: '',
+        nidra: ''
+      },
+      redFlagsDetected: [],
+      triagePriority: 'ROUTINE'
+    };
+
+    // ==========================================================
+    // ROBUST CLINICAL NLP DICTIONARY (INDIAN LOCAL SYNONYMS)
+    // Avoids false substring matches (e.g. 'tap' matching 'tablet')
+    // ==========================================================
+    const CLINICAL_ENTITIES = [
+      {
+        id: 'chest_pain',
+        priority: 1, // evaluate higher priority first
+        labelEn: 'Chest Pain / Heaviness',
+        labelHi: 'छाती में दर्द या भारीपन',
+        defaultSentenceEn: 'Chest pain and heaviness',
+        defaultSentenceHi: 'छाती में दर्द और भारीपन',
+        patterns: [
+          /\b(chest\s*pain|chest|heart\s*pain|heart\s*attack|cardiac|angina|chest\s*heaviness|chest\s*tightness)\b/i,
+          /\b(chhati|chati|seena|seene|chhati\s*me\s*dard|seene\s*me\s*dard|seena\s*phatna|dil\s*ka\s*dard|dil\s*me\s*dard|chhati\s*me\s*jalan)\b/i,
+          /\b(छाती|सीने|सीने\s*में\s*दर्द|छाती\s*में\s*दर्द|दिल\s*में\s*दर्द|हार्ट|हार्ट\s*अटैक|छाती\s*में\s*भारीपन)\b/u
+        ]
+      },
+      {
+        id: 'abdominal_pain',
+        priority: 2,
+        labelEn: 'Stomach / Abdominal Pain',
+        labelHi: 'पेट में दर्द या मरोड़',
+        defaultSentenceEn: 'Stomach and abdominal pain',
+        defaultSentenceHi: 'पेट में दर्द और मरोड़',
+        patterns: [
+          /\b(stomach\s*pain|stomach\s*ache|abdominal\s*pain|abdomen|belly\s*pain|tummy\s*pain|gastric|indigestion|cramps|bloating|acidity|vomiting|nausea|diarrhea|loose\s*motion|constipation)\b/i,
+          /\b(pet\s*dard|pet\s*me\s*dard|pait\s*dard|pait\s*me\s*dard|pet\s*kharab|pet\s*me\s*marod|marod|dast|ulti|ji\s*machlana|ji\s*ghabrana|kabz|khatti\s*dakar|pet\s*phoolna)\b/i,
+          /\b(पेट|पेट\s*दर्द|पेट\s*में\s*दर्द|मरोड़|दस्त|उल्टी|जी\s*मिचलाना|गैस|कब्ज|खट्टी\s*डकार|उदर)\b/u
+        ]
+      },
+      {
+        id: 'breathlessness',
+        priority: 3,
+        labelEn: 'Shortness of Breath',
+        labelHi: 'सांस लेने में तकलीफ',
+        defaultSentenceEn: 'Shortness of breath and breathing difficulty',
+        defaultSentenceHi: 'सांस लेने में तकलीफ और दम घुटना',
+        patterns: [
+          /\b(breathless|breathlessness|shortness\s*of\s*breath|difficulty\s*breathing|asthma|wheezing|suffocation|choking)\b/i,
+          /\b(saans\s*phoolna|sans\s*phulna|saans\s*lene\s*me\s*dikkat|saans\s*lene\s*me\s*takleef|dum\s*ghutna|dama|seeti\s*bajna)\b/i,
+          /\b(सांस|सांस\s*फूलना|सांस\s*लेने\s*में\s*तकलीफ|दम\s*घुटना|दमा|घुटन)\b/u
+        ]
+      },
+      {
+        id: 'cough_cold',
+        priority: 4,
+        labelEn: 'Cough & Cold',
+        labelHi: 'खांसी और जुकाम',
+        defaultSentenceEn: 'Cough and cold',
+        defaultSentenceHi: 'खांसी और जुकाम',
+        patterns: [
+          /\b(cough|cold|dry\s*cough|wet\s*cough|phlegm|sore\s*throat|sneezing|runny\s*nose|flu)\b/i,
+          /\b(khansi|khaansi|sookhi\s*khansi|balgam|zukam|jukam|sardi|nazla|cheenk|gale\s*me\s*dard|gala\s*kharab|gale\s*me\s*kharash)\b/i,
+          /\b(खांसी|जुकाम|कफ|बलगम|सर्दी|नाक\s*बहना|गले\s*में\s*खराश|गला\s*खराब|सूखी\s*खांसी|छींक)\b/u
+        ]
+      },
+      {
+        id: 'headache',
+        priority: 5,
+        labelEn: 'Severe Headache',
+        labelHi: 'तेज सिरदर्द',
+        defaultSentenceEn: 'Severe headache and dizziness',
+        defaultSentenceHi: 'तेज सिरदर्द और चक्कर आना',
+        patterns: [
+          /\b(headache|head\s*pain|migraine|dizziness|giddiness|fainting|vertigo)\b/i,
+          /\b(sir\s*dard|sir\s*me\s*dard|sar\s*dard|sar\s*me\s*dard|aadha\s*sir\s*dard|adhasisi|chakkar|chakkar\s*aana|sar\s*ghoomna|behoshi)\b/i,
+          /\b(सिरदर्द|सिर\s*में\s*दर्द|सर\s*दर्द|माइग्रेन|चक्कर|चक्कर\s*आना|सिर\s*घूमना|आधा\s*सीसी|बेहोशी)\b/u
+        ]
+      },
+      {
+        id: 'joint_pain',
+        priority: 6,
+        labelEn: 'Joint & Body Pain',
+        labelHi: 'जोड़ों व बदन में दर्द',
+        defaultSentenceEn: 'Joint, knee and body pain',
+        defaultSentenceHi: 'जोड़ों, घुटनों व बदन में दर्द',
+        patterns: [
+          /\b(joint\s*pain|knee\s*pain|back\s*pain|backache|body\s*pain|body\s*ache|neck\s*pain|arthritis|swelling|stiffness)\b/i,
+          /\b(jodon\s*me\s*dard|jodo\s*me\s*dard|ghutno\s*me\s*dard|ghutne\s*me\s*dard|kamar\s*dard|kamar\s*me\s*dard|peeth\s*dard|gardan\s*dard|badan\s*dard|badan\s*tootna|gathiya|sujan)\b/i,
+          /\b(जोड़ों\s*में\s*दर्द|घुटनों\s*में\s*दर्द|कमर\s*दर्द|पीठ\s*दर्द|गर्दन\s*दर्द|बदन\s*दर्द|गठिया|सूजन|जोड़)\b/u
+        ]
+      },
+      {
+        id: 'fever',
+        priority: 7,
+        labelEn: 'Fever & Chills',
+        labelHi: 'बुखार और कंपकंपी',
+        defaultSentenceEn: 'Fever with chills and body temperature',
+        defaultSentenceHi: 'बुखार और कंपकंपी',
+        patterns: [
+          /\b(fever|high\s*fever|temperature|pyrexia|chills|shivering|body\s*temperature)\b/i,
+          /\b(bukhar|bukhaar|tez\s*bukhar|taap|jwar|hararat|badan\s*garm|thand\s*lagna|kampkampani|thand\s*lagke\s*bukhar)\b/i,
+          /\b(बुखार|ज्वर|तेज\s*बुखार|ठंड\s*लगकर|कंपकंपी|हरारत|बदन\s*गरम|तापमान)\b/u
+        ]
+      }
+    ];
+
+    // ==========================================================
+    // BIDIRECTIONAL TRANSLATOR FOR USER INPUT
+    // Automatically translates typed/spoken text on language switch
+    // ==========================================================
+    const PHRASE_TRANSLATIONS = [
+      { en: "I have a fever", hi: "मुझे बुखार है", match: /\b(fever|bukhar|बुखार)\b/i },
+      { en: "Chest pain and heaviness", hi: "छाती में दर्द और भारीपन", match: /\b(chest|chhati|seene|छाती|सीने)\b/i },
+      { en: "Stomach pain and cramps", hi: "पेट में दर्द और मरोड़", match: /\b(stomach|pet|pait|abdomen|पेट)\b/i },
+      { en: "Difficulty in breathing", hi: "सांस लेने में तकलीफ", match: /\b(breath|saans|sans|सांस)\b/i },
+      { en: "Cough and cold", hi: "खांसी और जुकाम", match: /\b(cough|cold|khasi|zukam|खांसी|जुकाम)\b/i },
+      { en: "Severe headache", hi: "तेज सिरदर्द", match: /\b(headache|sir\s*dard|sar\s*dard|सिरदर्द)\b/i },
+      { en: "Joint and knee pain", hi: "जोड़ों और घुटनों में दर्द", match: /\b(joint|knee|jodon|ghutno|kamar|जोड़ों|कमर)\b/i }
+    ];
+
+    function translateText(text, targetLang) {
+      if (!text || !text.trim()) return "";
+      const trimmed = text.trim();
+
+      // Check known full sentences or symptom phrases
+      for (const p of PHRASE_TRANSLATIONS) {
+        if (p.match.test(trimmed)) {
+          return targetLang === 'hi' ? p.hi : p.en;
+        }
+      }
+
+      // Check clinical entity default sentences
+      for (const ent of CLINICAL_ENTITIES) {
+        for (const pat of ent.patterns) {
+          if (pat.test(trimmed)) {
+            return targetLang === 'hi' ? ent.defaultSentenceHi : ent.defaultSentenceEn;
+          }
+        }
+      }
+
+      // Fallback: word-level simple medical lexicon
+      const wordMap = {
+        'fever': 'बुखार', 'bukhar': 'Fever', 'बुखार': 'Fever',
+        'pain': 'दर्द', 'dard': 'Pain', 'दर्द': 'Pain',
+        'chest': 'छाती', 'chhati': 'Chest', 'seena': 'Chest', 'छाती': 'Chest',
+        'stomach': 'पेट', 'pet': 'Stomach', 'pait': 'Stomach', 'पेट': 'Stomach',
+        'headache': 'सिरदर्द', 'sir dard': 'Headache', 'sar dard': 'Headache', 'सिरदर्द': 'Headache',
+        'cough': 'खांसी', 'khasi': 'Cough', 'खांसी': 'Cough',
+        'cold': 'जुकाम', 'zukam': 'Cold', 'जुकाम': 'Cold',
+        'vomiting': 'उल्टी', 'ulti': 'Vomiting', 'उल्टी': 'Vomiting',
+        'weakness': 'कमजोरी', 'kamzori': 'Weakness', 'कमजोरी': 'Weakness'
+      };
+
+      let result = trimmed;
+      for (const [k, v] of Object.entries(wordMap)) {
+        const regex = new RegExp(`\\b${k}\\b`, 'gi');
+        if (regex.test(result)) {
+          result = result.replace(regex, v);
+        }
+      }
+      return result;
+    }
+
+    // ==========================================================
+    // CLINICAL ENTITY RECOGNITION ENGINE
+    // ==========================================================
+    function extractClinicalEntities(rawText) {
+      if (!rawText || !rawText.trim()) return;
+      const text = rawText.trim();
+
+      let matchedEntity = null;
+
+      // Check entities in priority order
+      for (const entity of CLINICAL_ENTITIES) {
+        for (const pattern of entity.patterns) {
+          if (pattern.test(text)) {
+            matchedEntity = entity;
+            break;
+          }
+        }
+        if (matchedEntity) break;
+      }
+
+      if (matchedEntity) {
+        intakeState.chiefComplaint = matchedEntity.id;
+        intakeState.aiDetectedLabel = currentLanguage === 'hi' ? matchedEntity.labelHi : matchedEntity.labelEn;
+        intakeState.customComplaintEn = translateText(text, 'en');
+        intakeState.customComplaintHi = translateText(text, 'hi');
+      } else {
+        intakeState.chiefComplaint = 'other';
+        intakeState.aiDetectedLabel = rawText;
+        intakeState.customComplaintEn = translateText(text, 'en');
+        intakeState.customComplaintHi = translateText(text, 'hi');
+      }
+
+      // Check Duration from speech
+      if (/\b(hours|ghante|ghanta|aaj\s*se|few\s*hours)\b/i.test(text)) {
+        intakeState.socrates.duration = 'few_hours';
+      } else if (/\b(1\s*din|2\s*din|kal\s*se|yesterday|1\s*day|2\s*days|1-2\s*days)\b/i.test(text)) {
+        intakeState.socrates.duration = '1_2_days';
+      } else if (/\b(hafte|hafta|week|7\s*din|1\s*week)\b/i.test(text)) {
+        intakeState.socrates.duration = '1_week';
+      } else if (/\b(mahine|mahina|month|over\s*a\s*month)\b/i.test(text)) {
+        intakeState.socrates.duration = '1_month';
+      } else if (/\b(achanak|sudden|minutes\s*ago)\b/i.test(text)) {
+        intakeState.socrates.duration = 'sudden';
+      }
+
+      // Check Associations from speech
+      if (/\b(pasina|sweat|sweating|पसीना)\b/i.test(text)) {
+        if (!intakeState.socrates.associations.includes('sweating')) intakeState.socrates.associations.push('sweating');
+      }
+      if (/\b(ulti|vomit|vomiting|nausea|ji\s*machlana|उल्टी)\b/i.test(text)) {
+        if (!intakeState.socrates.associations.includes('nausea')) intakeState.socrates.associations.push('nausea');
+      }
+      if (/\b(chakkar|dizzy|dizziness|faint|चक्कर)\b/i.test(text)) {
+        if (!intakeState.socrates.associations.includes('dizziness')) intakeState.socrates.associations.push('dizziness');
+      }
+
+      // Check Severity from speech
+      if (/\b(bahut\s*tez|severe|unbearable|asahan|असहनीय|बहुत\s*तेज)\b/i.test(text)) {
+        intakeState.socrates.severity = 8;
+      }
+
+      checkRedFlags();
+    }
+
+    // ==========================================================
+    // LOCALIZATION DICTIONARIES
+    // ==========================================================
+    const I18N = {
+      en: {
+        headerSub: "Module A: Clinical Intake",
+        ayushAllopathy: "Allopathy Mode",
+        ayushAyurvedic: "AYUSH Mode",
+        speakPrompt: "Tap mic to speak your symptoms",
+        speakActive: "Listening... speak now in English",
+        speakError: "Speech recognition not supported in this browser",
+        aiRecognized: "AI Detected Symptom:",
+        next: "Next",
+        back: "Back",
+        submit: "Confirm & Proceed to Document Scan",
+        emergencyTitle: "EMERGENCY PRIORITY DETECTED",
+        emergencyDefault: "Symptoms indicate potential critical condition. Hospital triage staff will be alerted for priority consultation.",
+        steps: [
+          "Chief Complaint",
+          "Symptom Details (HPI)",
+          "Past Medical History",
+          "Medications & Allergies",
+          "Personal & Family History",
+          "Review of Systems",
+          "Summary Review"
+        ],
+        ayushSteps: [
+          "Chief Complaint",
+          "Ahara & Agni Assessment",
+          "Prakriti & Koshtha",
+          "Past & Family History",
+          "Nidra & Vihara Assessment",
+          "Summary Review"
+        ],
+        complaints: {
+          title: "What is the main problem bothering you?",
+          sub: "Select from common symptoms or speak into the microphone",
+          placeholder: "Type or speak specific complaint details...",
+          items: [
+            { id: "chest_pain", label: "💔 Chest Pain / Heaviness", isDanger: true },
+            { id: "fever", label: "🌡️ Fever & Chills" },
+            { id: "abdominal_pain", label: "🤢 Stomach / Abdominal Pain" },
+            { id: "breathlessness", label: "🫁 Shortness of Breath", isDanger: true },
+            { id: "cough_cold", label: "🤧 Cough & Cold" },
+            { id: "headache", label: "🤕 Severe Headache" },
+            { id: "joint_pain", label: "🦴 Joint & Body Pain" },
+            { id: "other", label: "✍️ Other Problem" }
+          ]
+        },
+        hpi: {
+          title: "Tell us more about your symptoms",
+          sub: "When did it start, how does it feel, and does it spread anywhere?",
+          durationLabel: "When did it start? (Onset & Duration)",
+          durationItems: [
+            { id: "few_hours", label: "Few hours ago" },
+            { id: "1_2_days", label: "1 - 2 Days" },
+            { id: "1_week", label: "About 1 Week" },
+            { id: "1_month", label: "Over a Month" },
+            { id: "sudden", label: "Sudden onset (Minutes ago)" }
+          ],
+          characterLabel: "How does the pain/symptom feel? (Character)",
+          characterItems: [
+            { id: "dull", label: "Dull ache" },
+            { id: "sharp", label: "Sharp / Stabbing" },
+            { id: "burning", label: "Burning sensation" },
+            { id: "crushing", label: "Crushing / Heavy pressure" },
+            { id: "throbbing", label: "Throbbing / Pulsing" },
+            { id: "cramping", label: "Colicky / Cramping" }
+          ],
+          radiationLabel: "Does the pain radiate or spread anywhere?",
+          radiationItems: [
+            { id: "none", label: "No spread (Stays in one place)" },
+            { id: "left_arm", label: "Spreads to Left Arm", isDanger: true },
+            { id: "jaw_neck", label: "Spreads to Jaw / Neck", isDanger: true },
+            { id: "back", label: "Spreads to Back" },
+            { id: "abdomen", label: "Spreads to Lower Abdomen" }
+          ],
+          associationsLabel: "Any other associated symptoms? (Multi-select)",
+          associationsItems: [
+            { id: "sweating", label: "Profuse Sweating", isDanger: true },
+            { id: "nausea", label: "Nausea / Vomiting" },
+            { id: "breathless", label: "Shortness of Breath", isDanger: true },
+            { id: "dizziness", label: "Dizziness / Fainting" },
+            { id: "fever_assoc", label: "Fever / Shivering" },
+            { id: "palpitations", label: "Fast Heartbeat (Palpitations)" }
+          ],
+          severityLabel: "Pain / Discomfort Level",
+          severityHint: "(1 = Mild, 10 = Severe & Unbearable)"
+        },
+        past: {
+          title: "Do you have any existing medical conditions?",
+          sub: "Select all chronic conditions diagnosed previously",
+          placeholder: "Mention any other past illnesses or surgeries...",
+          items: [
+            { id: "diabetes", label: "Diabetes Mellitus" },
+            { id: "hypertension", label: "High Blood Pressure (Hypertension)" },
+            { id: "cad_mi", label: "Heart Disease / Prior Heart Attack" },
+            { id: "asthma", label: "Asthma / COPD" },
+            { id: "thyroid", label: "Thyroid Disorder" },
+            { id: "kidney", label: "Kidney Disease" },
+            { id: "surgery", label: "Prior Major Surgery" },
+            { id: "none_past", label: "No Prior Chronic Illness" }
+          ]
+        },
+        meds: {
+          title: "Drug Allergies & Daily Medications",
+          sub: "Do you have adverse drug reactions or take daily prescriptions?",
+          allergyLabel: "Known Drug / Substance Allergies:",
+          medsLabel: "Current Daily Medications:",
+          medsPlaceholder: "e.g. Tab Amlodipine 5mg, Metformin 500mg, Inhaler...",
+          items: [
+            { id: "penicillin", label: "Penicillin / Amoxicillin Allergy", isDanger: true },
+            { id: "sulfa", label: "Sulfa Drugs Allergy", isDanger: true },
+            { id: "nsaids", label: "Aspirin / Painkillers (NSAIDs) Allergy", isDanger: true },
+            { id: "food_dust", label: "Food / Dust Allergy" },
+            { id: "none_allergy", label: "No Known Drug Allergies (NKDA)" }
+          ]
+        },
+        family: {
+          title: "Personal Habits & Family History",
+          sub: "Family history of premature conditions and lifestyle factors",
+          familyLabel: "Family Medical History:",
+          lifestyleLabel: "Personal Lifestyle & Habits:",
+          smokingLabel: "Tobacco / Smoking:",
+          alcoholLabel: "Alcohol Consumption:",
+          familyItems: [
+            { id: "early_cad", label: "Early Heart Attack in Parents (<55 yrs)" },
+            { id: "family_diabetes", label: "Diabetes in Family" },
+            { id: "family_cancer", label: "Cancer in Family" },
+            { id: "family_stroke", label: "Stroke / Paralysis in Family" },
+            { id: "none_family", label: "No Major Hereditary Illness" }
+          ],
+          smokingOptions: [
+            { id: "non_smoker", label: "Non-smoker" },
+            { id: "active_smoker", label: "Active Smoker (Cigarette/Bidi)" },
+            { id: "tobacco_chewer", label: "Chews Tobacco / Gutkha" },
+            { id: "former_smoker", label: "Former Smoker (Quit)" }
+          ],
+          alcoholOptions: [
+            { id: "non_drinker", label: "Non-drinker" },
+            { id: "social_drinker", label: "Occasional / Social Drinker" },
+            { id: "regular_drinker", label: "Regular Drinker" }
+          ]
+        },
+        ros: {
+          title: "Review of Systems (Secondary Symptoms)",
+          sub: "Rapid systemic check for any secondary warning signs",
+          items: [
+            { id: "fever_ros", label: "Fever or Chills" },
+            { id: "dyspnea_rest", label: "Shortness of breath while resting" },
+            { id: "chronic_cough", label: "Chronic cough for over 2 weeks" },
+            { id: "palpitations_ros", label: "Chest pounding / Palpitations" },
+            { id: "weight_loss", label: "Unexplained weight loss" },
+            { id: "dysuria", label: "Burning sensation during urination" },
+            { id: "bowel_changes", label: "Persistent diarrhea or constipation" },
+            { id: "none_ros", label: "None of the above" }
+          ]
+        },
+        ayush: {
+          agniTitle: "Agni & Ahara Assessment",
+          agniSub: "Assessment of digestive capacity and dietary patterns",
+          agniLabel: "Agni (Digestive Fire):",
+          agniItems: [
+            { id: "samagni", label: "Samagni (Balanced digestion)" },
+            { id: "vishama", label: "Vishama Agni (Irregular digestion & bloating - Vata)" },
+            { id: "tikshna", label: "Tikshna Agni (Hyperacidic / burning hunger - Pitta)" },
+            { id: "manda", label: "Manda Agni (Sluggish digestion & heaviness - Kapha)" }
+          ],
+          aharaLabel: "Ahara Habit (Diet Pattern):",
+          aharaItems: [
+            { id: "balanced", label: "Timely & Balanced home meals" },
+            { id: "irregular", label: "Irregular meal timings" },
+            { id: "spicy_fried", label: "Excessive spicy, oily or fried food" },
+            { id: "cold_dry", label: "Excessive dry or cold food" }
+          ],
+          prakritiTitle: "Prakriti & Koshtha Assessment",
+          prakritiSub: "Constitutional dominance and bowel habit assessment",
+          prakritiLabel: "Prakriti (Dominant Constitution):",
+          prakritiItems: [
+            { id: "vata", label: "Vata Dominant (Dry, cold, light)" },
+            { id: "pitta", label: "Pitta Dominant (Heat, acidity, sharp)" },
+            { id: "kapha", label: "Kapha Dominant (Heavy, slow, calm)" },
+            { id: "vata_pitta", label: "Vata-Pitta" },
+            { id: "pitta_kapha", label: "Pitta-Kapha" },
+            { id: "tridosha", label: "Tridoshaja (Balanced)" }
+          ],
+          koshthaLabel: "Koshtha (Bowel Nature):",
+          koshthaItems: [
+            { id: "krura", label: "Krura Koshtha (Hard stools / Constipated)" },
+            { id: "mridu", label: "Mridu Koshtha (Soft stools / Quick evacuation)" },
+            { id: "madhyama", label: "Madhyama Koshtha (Normal regular bowel)" }
+          ],
+          nidraTitle: "Nidra Assessment",
+          nidraSub: "Sleep cycle and daily routine balance",
+          nidraLabel: "Nidra (Sleep Quality):",
+          nidraItems: [
+            { id: "sound", label: "Prakrita (Sound, refreshing sleep)" },
+            { id: "anidra", label: "Anidra (Disturbed / sleeplessness)" },
+            { id: "atinidra", label: "Atinidra (Excessive sleepiness / lethargy)" }
+          ]
+        },
+        review: {
+          title: "Review Structured Clinical Intake",
+          sub: "Synthesized physician-ready summary generated from your responses",
+          ccLabel: "Chief Complaint",
+          hpiLabel: "History of Present Illness (HPI)",
+          pastLabel: "Past Medical / Surgical",
+          medsLabel: "Drug Allergies & Current Meds",
+          familyLabel: "Family & Personal History",
+          rosLabel: "Review of Systems (ROS)",
+          ayushLabel: "AYUSH Parameters (Dashavidha Pariksha)",
+          notSpecified: "Not specified",
+          noneReported: "None reported",
+          noAllergies: "No known drug allergies",
+          noMeds: "No regular daily medications",
+          nonContributory: "Non-contributory",
+          negativeRos: "Negative for major constitutional signs"
+        }
+      },
+      hi: {
+        headerSub: "मॉड्यूल A: क्लिनिकल इतिहास",
+        ayushAllopathy: "एलोपैथी मोड",
+        ayushAyurvedic: "आयुष (AYUSH) मोड",
+        speakPrompt: "बोलने के लिए माइक दबाएं",
+        speakActive: "सुन रहे हैं... कृपया हिंदी में अपने लक्षण बताएं",
+        speakError: "इस ब्राउज़र में आवाज पहचान समर्थित नहीं है",
+        aiRecognized: "AI द्वारा पहचाना गया लक्षण:",
+        next: "आगे बढ़ें",
+        back: "पीछे जाएं",
+        submit: "पुष्टि करें और दस्तावेज़ स्कैन पर जाएं",
+        emergencyTitle: "आपातकालीन स्थिति पहचानी गई",
+        emergencyDefault: "लक्षण गंभीर स्थिति का संकेत देते हैं। प्राथमिकता से जांच के लिए अस्पताल ट्राइएज स्टाफ को सूचित किया जा रहा है।",
+        steps: [
+          "मुख्य समस्या",
+          "लक्षणों का विवरण",
+          "पिछला मेडिकल इतिहास",
+          "दवाइयां और एलर्जी",
+          "व्यक्तिगत व पारिवारिक इतिहास",
+          "शारीरिक प्रणालियों की जांच",
+          "विवरण की समीक्षा"
+        ],
+        ayushSteps: [
+          "मुख्य समस्या",
+          "आहार एवं अग्नि परीक्षा",
+          "प्रकृति एवं कोष्ठ परीक्षा",
+          "पूर्व एवं कुल इतिहास",
+          "निद्रा एवं विहार परीक्षा",
+          "विवरण की समीक्षा"
+        ],
+        complaints: {
+          title: "आपको मुख्य रूप से क्या परेशानी हो रही है?",
+          sub: "नीचे दिए गए मुख्य लक्षणों में से चुनें या माइक दबाकर बोलें",
+          placeholder: "अपनी समस्या का विवरण यहाँ लिखें या बोलें...",
+          items: [
+            { id: "chest_pain", label: "💔 छाती में दर्द या भारीपन", isDanger: true },
+            { id: "fever", label: "🌡️ बुखार और कंपकंपी" },
+            { id: "abdominal_pain", label: "🤢 पेट में दर्द" },
+            { id: "breathlessness", label: "🫁 सांस लेने में तकलीफ", isDanger: true },
+            { id: "cough_cold", label: "🤧 खांसी और जुकाम" },
+            { id: "headache", label: "🤕 तेज सिरदर्द" },
+            { id: "joint_pain", label: "🦴 जोड़ों व बदन में दर्द" },
+            { id: "other", label: "✍️ अन्य कोई समस्या" }
+          ]
+        },
+        hpi: {
+          title: "अपनी परेशानी के बारे में और बताएं",
+          sub: "यह कब शुरू हुआ, कैसा दर्द है, और क्या यह कहीं फैलता है?",
+          durationLabel: "यह कब से शुरू हुआ?",
+          durationItems: [
+            { id: "few_hours", label: "कुछ घंटे पहले" },
+            { id: "1_2_days", label: "1 - 2 दिन पहले" },
+            { id: "1_week", label: "लगभग 1 हफ़्ता पहले" },
+            { id: "1_month", label: "एक महीने से अधिक समय से" },
+            { id: "sudden", label: "अचानक शुरू हुआ (कुछ मिनट पहले)" }
+          ],
+          characterLabel: "दर्द या लक्षण किस प्रकार का महसूस होता है?",
+          characterItems: [
+            { id: "dull", label: "हल्का धीमा दर्द" },
+            { id: "sharp", label: "तेज चुभने वाला दर्द" },
+            { id: "burning", label: "जलन जैसा दर्द" },
+            { id: "crushing", label: "भारी दबाव / जकड़न जैसा दर्द" },
+            { id: "throbbing", label: "धड़कने / फड़कने जैसा दर्द" },
+            { id: "cramping", label: "मरोड़ जैसा दर्द" }
+          ],
+          radiationLabel: "क्या दर्द शरीर के किसी अन्य हिस्से में फैलता है?",
+          radiationItems: [
+            { id: "none", label: "कहीं नहीं फैलता (एक ही जगह रहता है)" },
+            { id: "left_arm", label: "बायें हाथ की तरफ फैलता है", isDanger: true },
+            { id: "jaw_neck", label: "जबड़े या गर्दन की तरफ फैलता है", isDanger: true },
+            { id: "back", label: "पीठ की तरफ फैलता है" },
+            { id: "abdomen", label: "पेट के निचले हिस्से में फैलता है" }
+          ],
+          associationsLabel: "क्या इसके साथ अन्य कोई लक्षण भी हैं? (एक से अधिक चुन सकते हैं)",
+          associationsItems: [
+            { id: "sweating", label: "बहुत पसीना आना", isDanger: true },
+            { id: "nausea", label: "जी मिचलाना या उल्टी" },
+            { id: "breathless", label: "सांस फूलना", isDanger: true },
+            { id: "dizziness", label: "चक्कर आना या बेहोशी" },
+            { id: "fever_assoc", label: "बुखार या कंपकंपी" },
+            { id: "palpitations", label: "दिल की तेज धड़कन / घबराहट" }
+          ],
+          severityLabel: "दर्द या परेशानी का स्तर",
+          severityHint: "(1 = हल्का, 10 = अत्यधिक असहनीय)"
+        },
+        past: {
+          title: "क्या आपको पहले से कोई बीमारी है?",
+          sub: "पहले से पहचानी गई पुरानी बीमारियाँ चुनें",
+          placeholder: "अन्य कोई पुरानी बीमारी या ऑपरेशन का विवरण लिखें...",
+          items: [
+            { id: "diabetes", label: "मधुमेह (शुगर)" },
+            { id: "hypertension", label: "हाई ब्लड प्रेशर (बीपी)" },
+            { id: "cad_mi", label: "दिल की बीमारी या पुराना हार्ट अटैक" },
+            { id: "asthma", label: "दमा / सांस की बीमारी" },
+            { id: "thyroid", label: "थायरॉइड की समस्या" },
+            { id: "kidney", label: "गुर्दे (किडनी) की बीमारी" },
+            { id: "surgery", label: "पहले कोई बड़ा ऑपरेशन / सर्जरी" },
+            { id: "none_past", label: "कोई पुरानी बीमारी नहीं है" }
+          ]
+        },
+        meds: {
+          title: "दवाइयां और एलर्जी",
+          sub: "क्या आपको किसी दवा से एलर्जी है या आप कोई नियमित दवा लेते हैं?",
+          allergyLabel: "ज्ञात दवाओं से एलर्जी:",
+          medsLabel: "दैनिक ली जाने वाली दवाएं:",
+          medsPlaceholder: "उदा. बीपी की गोली, शुगर की गोली, इनहेलर...",
+          items: [
+            { id: "penicillin", label: "पेनिसिलिन / एमोक्सिसिलिन एलर्जी", isDanger: true },
+            { id: "sulfa", label: "सल्फा दवाओं से एलर्जी", isDanger: true },
+            { id: "nsaids", label: "एस्पिरिन / दर्द निवारक दवाओं से एलर्जी", isDanger: true },
+            { id: "food_dust", label: "धूल या खाने से एलर्जी" },
+            { id: "none_allergy", label: "किसी दवा से कोई एलर्जी नहीं है" }
+          ]
+        },
+        family: {
+          title: "व्यक्तिगत व पारिवारिक इतिहास",
+          sub: "परिवार में गंभीर बीमारियाँ और जीवनशैली की आदतें",
+          familyLabel: "पारिवारिक मेडिकल इतिहास:",
+          lifestyleLabel: "व्यक्तिगत जीवनशैली व आदतें:",
+          smokingLabel: "तंबाकू / धूम्रपान:",
+          alcoholLabel: "शराब का सेवन:",
+          familyItems: [
+            { id: "early_cad", label: "माता-पिता में 55 वर्ष से पहले हार्ट अटैक" },
+            { id: "family_diabetes", label: "परिवार में शुगर (डायबिटीज)" },
+            { id: "family_cancer", label: "परिवार में कैंसर की बीमारी" },
+            { id: "family_stroke", label: "परिवार में लकवा (स्ट्रोक)" },
+            { id: "none_family", label: "परिवार में कोई गंभीर बीमारी नहीं" }
+          ],
+          smokingOptions: [
+            { id: "non_smoker", label: "धूम्रपान नहीं करते" },
+            { id: "active_smoker", label: "बीड़ी / सिगरेट पीते हैं" },
+            { id: "tobacco_chewer", label: "तंबाकू / गुटखा चबाते हैं" },
+            { id: "former_smoker", label: "पहले पीते थे, अब छोड़ दिया" }
+          ],
+          alcoholOptions: [
+            { id: "non_drinker", label: "शराब नहीं पीते" },
+            { id: "social_drinker", label: "कभी-कभार पीते हैं" },
+            { id: "regular_drinker", label: "नियमित पीते हैं" }
+          ]
+        },
+        ros: {
+          title: "शारीरिक प्रणालियों की जांच",
+          sub: "अन्य जुड़े हुए लक्षणों की त्वरित जांच",
+          items: [
+            { id: "fever_ros", label: "बुखार या ठंड लगना" },
+            { id: "dyspnea_rest", label: "बैठे रहने पर भी सांस फूलना" },
+            { id: "chronic_cough", label: "दो हफ्ते से ज्यादा समय से खांसी" },
+            { id: "palpitations_ros", label: "सीने में तेज धड़कन / घबराहट" },
+            { id: "weight_loss", label: "बिना कारण वजन घटना" },
+            { id: "dysuria", label: "पेशाब में जलन या दर्द" },
+            { id: "bowel_changes", label: "लगातार दस्त या कब्ज" },
+            { id: "none_ros", label: "इनमें से कोई लक्षण नहीं है" }
+          ]
+        },
+        ayush: {
+          agniTitle: "अग्नि एवं आहार परीक्षा",
+          agniSub: "पाचन क्षमता और खान-पान की आदतों का मूल्यांकन",
+          agniLabel: "अग्नि (पाचन क्षमता):",
+          agniItems: [
+            { id: "samagni", label: "समाग्नि (संतुलित पाचन)" },
+            { id: "vishama", label: "विषमाग्नि (अनियमित पाचन व गैस - वात)" },
+            { id: "tikshna", label: "तीक्ष्णाग्नि (अत्यधिक भूख व जलन - पित्त)" },
+            { id: "manda", label: "मन्दाग्नि (सुस्त पाचन व भारीपन - कफ)" }
+          ],
+          aharaLabel: "आहार की आदतें (भोजन प्रकार):",
+          aharaItems: [
+            { id: "balanced", label: "समय पर पौष्टिक व संतुलित भोजन" },
+            { id: "irregular", label: "अनियमित समय पर भोजन" },
+            { id: "spicy_fried", label: "अत्यधिक तला-भुना व मसालेदार भोजन" },
+            { id: "cold_dry", label: "रूखा, सूखा या बासी भोजन" }
+          ],
+          prakritiTitle: "प्रकृति एवं कोष्ठ परीक्षा",
+          prakritiSub: "शारीरिक प्रकृति और मल त्याग की प्रकृति का मूल्यांकन",
+          prakritiLabel: "प्रकृति (प्रधान दोष):",
+          prakritiItems: [
+            { id: "vata", label: "वात प्रधान (रूखापन, चंचलता)" },
+            { id: "pitta", label: "पित्त प्रधान (गर्मी, तीक्ष्णता)" },
+            { id: "kapha", label: "कफ प्रधान (भारीपन, स्थिरता)" },
+            { id: "vata_pitta", label: "वात-पित्त" },
+            { id: "pitta_kapha", label: "पित्त-कफ" },
+            { id: "tridosha", label: "त्रिदोषज (समान)" }
+          ],
+          koshthaLabel: "कोष्ठ (मल विसर्जन की प्रकृति):",
+          koshthaItems: [
+            { id: "krura", label: "क्रूर कोष्ठ (कठिन मल / कब्ज)" },
+            { id: "mridu", label: "मृदु कोष्ठ (नरम मल / तुरंत शौच)" },
+            { id: "madhyama", label: "मध्यम कोष्ठ (सामान्य नियमित मल)" }
+          ],
+          nidraTitle: "निद्रा परीक्षा",
+          nidraSub: "नींद का चक्र और दिनचर्या",
+          nidraLabel: "निद्रा (नींद की गुणवत्ता):",
+          nidraItems: [
+            { id: "sound", label: "प्राकृत (गहरी व आरामदायक नींद)" },
+            { id: "anidra", label: "अनिद्रा (कम या टूटी हुई नींद)" },
+            { id: "atinidra", label: "अतिनिद्रा (अत्यधिक आलस्य व नींद)" }
+          ]
+        },
+        review: {
+          title: "दर्ज इतिहास की समीक्षा",
+          sub: "आपके उत्तरों के आधार पर तैयार किया गया क्लिनिकल विवरण",
+          ccLabel: "मुख्य समस्या",
+          hpiLabel: "लक्षणों का विवरण (HPI)",
+          pastLabel: "पिछला मेडिकल इतिहास",
+          medsLabel: "दवाइयां और एलर्जी",
+          familyLabel: "पारिवारिक व जीवनशैली इतिहास",
+          rosLabel: "शारीरिक प्रणालियों की जांच",
+          ayushLabel: "आयुष मानक (दशविध परीक्षा)",
+          notSpecified: "अनिर्दिष्ट",
+          noneReported: "कोई नहीं",
+          noAllergies: "कोई ज्ञात दवा एलर्जी नहीं",
+          noMeds: "कोई नियमित दैनिक दवा नहीं",
+          nonContributory: "कोई विशेष पारिवारिक इतिहास नहीं",
+          negativeRos: "कोई गंभीर अतिरिक्त लक्षण नहीं"
+        }
+      }
+    };
+
+    // ==========================================================
+    // SPEECH RECOGNITION & SYNTHESIS
+    // ==========================================================
+    function initSpeech() {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec) {
+        speechRecognition = new SpeechRec();
+        speechRecognition.continuous = false;
+        speechRecognition.interimResults = false;
+        speechRecognition.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+
+        speechRecognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          handleSpeechResult(transcript);
+          stopListening();
+        };
+
+        speechRecognition.onerror = (e) => {
+          console.warn("Speech recognition error:", e);
+          stopListening();
+        };
+
+        speechRecognition.onend = () => {
+          stopListening();
+        };
+      }
+    }
+
+    function toggleSpeech(targetInputId) {
+      if (!speechRecognition) {
+        alert(I18N[currentLanguage].speakError);
+        return;
+      }
+
+      if (isListening) {
+        speechRecognition.stop();
+        stopListening();
+      } else {
+        speechRecognition.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+        speechRecognition.start();
+        isListening = true;
+        updateMicUI(true);
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      updateMicUI(false);
+    }
+
+    function updateMicUI(active) {
+      const micBtn = document.getElementById('voiceMicBtn');
+      const voiceStatus = document.getElementById('voiceStatus');
+      if (micBtn) {
+        if (active) {
+          micBtn.classList.add('listening');
+          if (voiceStatus) voiceStatus.textContent = I18N[currentLanguage].speakActive;
+        } else {
+          micBtn.classList.remove('listening');
+          if (voiceStatus) voiceStatus.textContent = I18N[currentLanguage].speakPrompt;
+        }
+      }
+    }
+
+    function handleSpeechResult(transcript) {
+      // Run NLP Entity Extraction
+      extractClinicalEntities(transcript);
+
+      // Set input in current language
+      intakeState.customComplaint = currentLanguage === 'hi' ? intakeState.customComplaintHi : intakeState.customComplaintEn;
+      
+      // Re-render UI to update highlighted chips & badge
+      renderCurrentStep();
+    }
+
+    function handleManualInput(text) {
+      extractClinicalEntities(text);
+      intakeState.customComplaint = text;
+      
+      // Update badge if present
+      const badge = document.getElementById('aiBadge');
+      if (badge && intakeState.aiDetectedLabel) {
+        badge.style.display = 'flex';
+        document.getElementById('aiBadgeText').textContent = intakeState.aiDetectedLabel;
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // ==========================================================
+    // LANGUAGE SWITCHER (With Automatic Input Translation)
+    // ==========================================================
+    function setLanguage(lang) {
+      if (currentLanguage === lang) return;
+      currentLanguage = lang;
+      
+      // Update custom complaint display to the newly selected language
+      if (intakeState.customComplaint) {
+        if (lang === 'hi') {
+          intakeState.customComplaint = intakeState.customComplaintHi || translateText(intakeState.customComplaint, 'hi');
+        } else {
+          intakeState.customComplaint = intakeState.customComplaintEn || translateText(intakeState.customComplaint, 'en');
+        }
+      }
+
+      // Update AI badge text if active
+      if (intakeState.chiefComplaint && intakeState.chiefComplaint !== 'other') {
+        const ent = CLINICAL_ENTITIES.find(x => x.id === intakeState.chiefComplaint);
+        if (ent) {
+          intakeState.aiDetectedLabel = lang === 'hi' ? ent.labelHi : ent.labelEn;
+        }
+      }
+
+      // Update toggle buttons active state
+      document.getElementById('langBtnEn').classList.toggle('active', lang === 'en');
+      document.getElementById('langBtnHi').classList.toggle('active', lang === 'hi');
+
+      document.getElementById('headerSubTitle').textContent = I18N[currentLanguage].headerSub;
+      document.getElementById('prevBtnText').textContent = I18N[currentLanguage].back;
+      document.getElementById('nextBtnText').textContent = currentStep === getTotalSteps() - 1 
+        ? I18N[currentLanguage].submit 
+        : I18N[currentLanguage].next;
+
+      const ayushLabel = document.getElementById('ayushLabel');
+      ayushLabel.textContent = isAyushMode ? I18N[currentLanguage].ayushAyurvedic : I18N[currentLanguage].ayushAllopathy;
+
+      renderCurrentStep();
+    }
+
+    function toggleAyushMode() {
+      isAyushMode = !isAyushMode;
+      const btn = document.getElementById('ayushToggleBtn');
+      const label = document.getElementById('ayushLabel');
+      if (isAyushMode) {
+        btn.classList.add('ayush-active');
+        label.textContent = I18N[currentLanguage].ayushAyurvedic;
+      } else {
+        btn.classList.remove('ayush-active');
+        label.textContent = I18N[currentLanguage].ayushAllopathy;
+      }
+      currentStep = 0;
+      renderCurrentStep();
+    }
+
+    // ==========================================================
+    // RED-FLAG TRIAGE SAFETY ENGINE
+    // ==========================================================
+    function checkRedFlags() {
+      const flags = [];
+      const cc = intakeState.chiefComplaint;
+      const custom = (intakeState.customComplaint || "").toLowerCase();
+      const rad = intakeState.socrates.radiation;
+      const assoc = intakeState.socrates.associations;
+      const severity = parseInt(intakeState.socrates.severity) || 0;
+
+      // 1. Acute Cardiac / ACS Check
+      const isChestPain = cc === 'chest_pain' || custom.includes('chest') || custom.includes('छाती') || custom.includes('heart') || custom.includes('दिल');
+      const hasCardiacSpread = rad === 'left_arm' || rad === 'jaw_neck';
+      const hasCardiacAssoc = assoc.includes('sweating') || assoc.includes('breathless') || severity >= 7;
+
+      if (isChestPain && (hasCardiacSpread || hasCardiacAssoc)) {
+        flags.push(currentLanguage === 'hi' 
+          ? "हार्ट अटैक / एक्यूट कोरोनरी सिंड्रोम का जोखिम (छाती में दर्द, बायें हाथ में फैलाव व पसीना)" 
+          : "High Risk Acute Coronary Syndrome (ACS): Chest pain with radiation / diaphoresis / severe intensity");
+      }
+
+      // 2. Stroke / CVA Check
+      if (
+        custom.includes('stroke') || custom.includes('paralysis') || custom.includes('लकवा') ||
+        custom.includes('weakness') || custom.includes('slurred') || custom.includes('speech')
+      ) {
+        flags.push(currentLanguage === 'hi'
+          ? "स्ट्रोक / न्यूरोलॉजिकल आपातकाल का जोखिम (अंगों में कमजोरी या बोलने में लड़खड़ाहट)"
+          : "Acute Neurological / Stroke Risk: Unilateral weakness or altered speech");
+      }
+
+      // 3. Severe Respiratory Distress
+      if (
+        (cc === 'breathlessness' || custom.includes('breath') || custom.includes('सांस')) &&
+        (severity >= 8 || assoc.includes('sweating'))
+      ) {
+        flags.push(currentLanguage === 'hi'
+          ? "गंभीर श्वसन संकट (सांस लेने में अत्यधिक तकलीफ)"
+          : "Severe Acute Dyspnea: Potential respiratory distress");
+      }
+
+      intakeState.redFlagsDetected = flags;
+      intakeState.triagePriority = flags.length > 0 ? 'EMERGENCY' : 'ROUTINE';
+
+      const alertBanner = document.getElementById('alertBanner');
+      if (flags.length > 0) {
+        alertBanner.classList.add('visible');
+        document.getElementById('alertBannerTitle').textContent = I18N[currentLanguage].emergencyTitle;
+        document.getElementById('alertBannerText').textContent = flags.join(" | ");
+      } else {
+        alertBanner.classList.remove('visible');
+      }
+    }
+
+    // ==========================================================
+    // WIZARD RENDERING
+    // ==========================================================
+    function getTotalSteps() {
+      return isAyushMode ? I18N[currentLanguage].ayushSteps.length : I18N[currentLanguage].steps.length;
+    }
+
+    function renderCurrentStep() {
+      const total = getTotalSteps();
+      const stepNames = isAyushMode ? I18N[currentLanguage].ayushSteps : I18N[currentLanguage].steps;
+      
+      document.getElementById('stepTitle').textContent = `${currentLanguage === 'hi' ? 'चरण' : 'Step'} ${currentStep + 1}: ${stepNames[currentStep]}`;
+      document.getElementById('stepCount').textContent = `${currentStep + 1} / ${total}`;
+      const pct = Math.round(((currentStep + 1) / total) * 100);
+      document.getElementById('progressBar').style.width = `${pct}%`;
+
+      document.getElementById('prevBtn').style.display = currentStep === 0 ? 'none' : 'inline-flex';
+      const isLast = currentStep === total - 1;
+      document.getElementById('nextBtnText').textContent = isLast ? I18N[currentLanguage].submit : I18N[currentLanguage].next;
+
+      const card = document.getElementById('wizardCard');
+      if (isAyushMode) {
+        renderAyushStep(card, currentStep);
+      } else {
+        renderAllopathyStep(card, currentStep);
+      }
+
+      checkRedFlags();
+    }
+
+    // ----------------------------------------------------------
+    // ALLOPATHY WIZARD STEPS
+    // ----------------------------------------------------------
+    function renderAllopathyStep(container, step) {
+      const dict = I18N[currentLanguage];
+
+      if (step === 0) {
+        // STEP 0: CHIEF COMPLAINT
+        const data = dict.complaints;
+        const hasAiMatch = intakeState.aiDetectedLabel && intakeState.chiefComplaint;
+
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}. ${data.sub}')" title="Listen">🔊</button>
+          </div>
+
+          <div class="chip-grid">
+            ${data.items.map(opt => `
+              <button class="chip-btn ${opt.isDanger ? 'danger-chip' : ''} ${intakeState.chiefComplaint === opt.id ? 'selected' : ''}" 
+                onclick="selectComplaint('${opt.id}')">
+                ${opt.label}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="voice-section">
+            <div class="voice-control-row">
+              <button id="voiceMicBtn" class="mic-btn" onclick="toggleSpeech('voiceTargetInput')">🎤</button>
+              <div class="voice-status" id="voiceStatus">${dict.speakPrompt}</div>
+            </div>
+            <input type="text" id="voiceTargetInput" class="text-input-field" 
+              placeholder="${data.placeholder}"
+              value="${intakeState.customComplaint}"
+              oninput="handleManualInput(this.value);" />
+
+            ${hasAiMatch ? `
+              <div id="aiBadge" class="ai-badge">
+                ✨ <span>${dict.aiRecognized} <strong id="aiBadgeText">${intakeState.aiDetectedLabel}</strong></span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else if (step === 1) {
+        // STEP 1: HPI / SOCRATES
+        const data = dict.hpi;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}')" title="Listen">🔊</button>
+          </div>
+
+          <!-- Duration -->
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.durationLabel}</label>
+            <div class="chip-grid">
+              ${data.durationItems.map(d => `
+                <button class="chip-btn ${intakeState.socrates.duration === d.id ? 'selected' : ''}" onclick="selectSocrates('duration', '${d.id}')">
+                  ${d.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Character -->
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.characterLabel}</label>
+            <div class="chip-grid">
+              ${data.characterItems.map(c => `
+                <button class="chip-btn ${intakeState.socrates.character === c.id ? 'selected' : ''}" onclick="selectSocrates('character', '${c.id}')">
+                  ${c.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Radiation -->
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.radiationLabel}</label>
+            <div class="chip-grid">
+              ${data.radiationItems.map(r => `
+                <button class="chip-btn ${r.isDanger ? 'danger-chip' : ''} ${intakeState.socrates.radiation === r.id ? 'selected' : ''}" onclick="selectSocrates('radiation', '${r.id}')">
+                  ${r.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Associations -->
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.associationsLabel}</label>
+            <div class="chip-grid">
+              ${data.associationsItems.map(a => `
+                <button class="chip-btn ${a.isDanger ? 'danger-chip' : ''} ${intakeState.socrates.associations.includes(a.id) ? 'selected' : ''}" onclick="toggleAssociation('${a.id}')">
+                  ${a.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Severity Slider -->
+          <div class="severity-container">
+            <div class="slider-labels">
+              <span>${data.severityLabel}: <strong id="sevDisplay" style="color: var(--primary); font-size: 16px;">${intakeState.socrates.severity} / 10</strong></span>
+              <span>${data.severityHint}</span>
+            </div>
+            <input type="range" min="1" max="10" value="${intakeState.socrates.severity}" class="severity-slider"
+              oninput="intakeState.socrates.severity = this.value; document.getElementById('sevDisplay').textContent = this.value + ' / 10'; checkRedFlags();" />
+          </div>
+        `;
+      } else if (step === 2) {
+        // STEP 2: PAST MEDICAL & SURGICAL HISTORY
+        const data = dict.past;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}')" title="Listen">🔊</button>
+          </div>
+
+          <div class="chip-grid">
+            ${data.items.map(item => `
+              <button class="chip-btn ${intakeState.pastHistory.includes(item.id) ? 'selected' : ''}" onclick="togglePastHistory('${item.id}')">
+                ${item.label}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="voice-section">
+            <div class="voice-control-row">
+              <button id="voiceMicBtn" class="mic-btn" onclick="toggleSpeech('voiceTargetInput')">🎤</button>
+              <div class="voice-status" id="voiceStatus">${dict.speakPrompt}</div>
+            </div>
+            <input type="text" id="voiceTargetInput" class="text-input-field" 
+              placeholder="${data.placeholder}"
+              value="${intakeState.pastHistoryOther}"
+              oninput="intakeState.pastHistoryOther = this.value;" />
+          </div>
+        `;
+      } else if (step === 3) {
+        // STEP 3: DRUG ALLERGIES & MEDICATIONS
+        const data = dict.meds;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}')" title="Listen">🔊</button>
+          </div>
+
+          <label style="font-weight: 600; font-size: 14px;">${data.allergyLabel}</label>
+          <div class="chip-grid">
+            ${data.items.map(item => `
+              <button class="chip-btn ${item.isDanger ? 'danger-chip' : ''} ${intakeState.drugAllergy.includes(item.id) ? 'selected' : ''}" onclick="toggleAllergy('${item.id}')">
+                ${item.label}
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="voice-section" style="margin-top: 10px;">
+            <label style="font-weight: 600; font-size: 14px;">${data.medsLabel}</label>
+            <div class="voice-control-row">
+              <button id="voiceMicBtn" class="mic-btn" onclick="toggleSpeech('voiceTargetInput')">🎤</button>
+              <div class="voice-status" id="voiceStatus">${dict.speakPrompt}</div>
+            </div>
+            <input type="text" id="voiceTargetInput" class="text-input-field" 
+              placeholder="${data.medsPlaceholder}"
+              value="${intakeState.dailyMedications}"
+              oninput="intakeState.dailyMedications = this.value;" />
+          </div>
+        `;
+      } else if (step === 4) {
+        // STEP 4: PERSONAL & FAMILY HISTORY
+        const data = dict.family;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}')" title="Listen">🔊</button>
+          </div>
+
+          <!-- Family History -->
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.familyLabel}</label>
+            <div class="chip-grid">
+              ${data.familyItems.map(f => `
+                <button class="chip-btn ${intakeState.familyHistory.includes(f.id) ? 'selected' : ''}" onclick="toggleFamilyHistory('${f.id}')">
+                  ${f.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Personal Habits -->
+          <div style="margin-top: 10px;">
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.lifestyleLabel}</label>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px;">
+                <span style="font-size: 13px; color: var(--text-muted);">${data.smokingLabel}</span>
+                <select class="text-input-field" onchange="intakeState.lifestyle.smoking = this.value;">
+                  ${data.smokingOptions.map(opt => `
+                    <option value="${opt.id}" ${intakeState.lifestyle.smoking === opt.id ? 'selected' : ''}>${opt.label}</option>
+                  `).join('')}
+                </select>
+              </div>
+
+              <div style="flex: 1; min-width: 200px;">
+                <span style="font-size: 13px; color: var(--text-muted);">${data.alcoholLabel}</span>
+                <select class="text-input-field" onchange="intakeState.lifestyle.alcohol = this.value;">
+                  ${data.alcoholOptions.map(opt => `
+                    <option value="${opt.id}" ${intakeState.lifestyle.alcohol === opt.id ? 'selected' : ''}>${opt.label}</option>
+                  `).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (step === 5) {
+        // STEP 5: REVIEW OF SYSTEMS (ROS)
+        const data = dict.ros;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.title}</h3>
+              <div class="question-subtitle">${data.sub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.title}')" title="Listen">🔊</button>
+          </div>
+
+          <div class="chip-grid">
+            ${data.items.map(r => `
+              <button class="chip-btn ${intakeState.ros.includes(r.id) ? 'selected' : ''}" onclick="toggleROS('${r.id}')">
+                ${r.label}
+              </button>
+            `).join('')}
+          </div>
+        `;
+      } else if (step === 6) {
+        // STEP 6: SUMMARY REVIEW CARD
+        renderReviewSummary(container);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // AYUSH WIZARD STEPS
+    // ----------------------------------------------------------
+    function renderAyushStep(container, step) {
+      const dict = I18N[currentLanguage];
+
+      if (step === 0) {
+        renderAllopathyStep(container, 0); // Chief Complaint
+      } else if (step === 1) {
+        const data = dict.ayush;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.agniTitle}</h3>
+              <div class="question-subtitle">${data.agniSub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.agniTitle}')" title="Listen">🔊</button>
+          </div>
+
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.agniLabel}</label>
+            <div class="chip-grid">
+              ${data.agniItems.map(a => `
+                <button class="chip-btn ${intakeState.ayush.agni === a.id ? 'selected' : ''}" onclick="intakeState.ayush.agni = '${a.id}'; renderCurrentStep();">
+                  ${a.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.aharaLabel}</label>
+            <div class="chip-grid">
+              ${data.aharaItems.map(h => `
+                <button class="chip-btn ${intakeState.ayush.ahara === h.id ? 'selected' : ''}" onclick="intakeState.ayush.ahara = '${h.id}'; renderCurrentStep();">
+                  ${h.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (step === 2) {
+        const data = dict.ayush;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.prakritiTitle}</h3>
+              <div class="question-subtitle">${data.prakritiSub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.prakritiTitle}')" title="Listen">🔊</button>
+          </div>
+
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.prakritiLabel}</label>
+            <div class="chip-grid">
+              ${data.prakritiItems.map(p => `
+                <button class="chip-btn ${intakeState.ayush.prakriti === p.id ? 'selected' : ''}" onclick="intakeState.ayush.prakriti = '${p.id}'; renderCurrentStep();">
+                  ${p.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.koshthaLabel}</label>
+            <div class="chip-grid">
+              ${data.koshthaItems.map(k => `
+                <button class="chip-btn ${intakeState.ayush.koshtha === k.id ? 'selected' : ''}" onclick="intakeState.ayush.koshtha = '${k.id}'; renderCurrentStep();">
+                  ${k.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (step === 3) {
+        renderAllopathyStep(container, 2); // Past Medical & Surgical
+      } else if (step === 4) {
+        const data = dict.ayush;
+        container.innerHTML = `
+          <div class="question-header">
+            <div>
+              <h3 class="question-title">${data.nidraTitle}</h3>
+              <div class="question-subtitle">${data.nidraSub}</div>
+            </div>
+            <button class="audio-prompt-btn" onclick="speakText('${data.nidraTitle}')" title="Listen">🔊</button>
+          </div>
+
+          <div>
+            <label style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">${data.nidraLabel}</label>
+            <div class="chip-grid">
+              ${data.nidraItems.map(n => `
+                <button class="chip-btn ${intakeState.ayush.nidra === n.id ? 'selected' : ''}" onclick="intakeState.ayush.nidra = '${n.id}'; renderCurrentStep();">
+                  ${n.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (step === 5) {
+        renderReviewSummary(container);
+      }
+    }
+
+    // ----------------------------------------------------------
+    // SUMMARY REVIEW COMPONENT
+    // ----------------------------------------------------------
+    function renderReviewSummary(container) {
+      const dict = I18N[currentLanguage];
+      const rev = dict.review;
+
+      const ccObj = dict.complaints.items.find(x => x.id === intakeState.chiefComplaint);
+      let ccDisplay = ccObj ? ccObj.label : '';
+      if (!ccDisplay && intakeState.customComplaint) {
+        ccDisplay = intakeState.customComplaint;
+      } else if (!ccDisplay) {
+        ccDisplay = rev.notSpecified;
+      }
+
+      const hpiText = buildHPITextLocalized(currentLanguage);
+
+      const pastLabels = intakeState.pastHistory.map(id => {
+        const item = dict.past.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      if (intakeState.pastHistoryOther) pastLabels.push(intakeState.pastHistoryOther);
+      const pastText = pastLabels.join(", ") || rev.noneReported;
+
+      const allergyLabels = intakeState.drugAllergy.map(id => {
+        const item = dict.meds.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const allergyText = allergyLabels.join(", ") || rev.noAllergies;
+      const medsText = intakeState.dailyMedications || rev.noMeds;
+
+      const famLabels = intakeState.familyHistory.map(id => {
+        const item = dict.family.familyItems.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const famText = famLabels.join(", ") || rev.nonContributory;
+
+      const smokingObj = dict.family.smokingOptions.find(x => x.id === intakeState.lifestyle.smoking);
+      const alcoholObj = dict.family.alcoholOptions.find(x => x.id === intakeState.lifestyle.alcohol);
+      const personalText = `${dict.family.smokingLabel} ${smokingObj ? smokingObj.label : intakeState.lifestyle.smoking}, ${dict.family.alcoholLabel} ${alcoholObj ? alcoholObj.label : intakeState.lifestyle.alcohol}`;
+
+      const rosLabels = intakeState.ros.map(id => {
+        const item = dict.ros.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const rosText = rosLabels.join(", ") || rev.negativeRos;
+
+      container.innerHTML = `
+        <div class="question-header">
+          <div>
+            <h3 class="question-title">${rev.title}</h3>
+            <div class="question-subtitle">${rev.sub}</div>
+          </div>
+          <button class="audio-prompt-btn" onclick="speakText('${rev.title}')" title="Listen">🔊</button>
+        </div>
+
+        <div class="review-grid">
+          <div class="review-item">
+            <strong>${rev.ccLabel}</strong>
+            <p>${ccDisplay} ${intakeState.customComplaint && ccObj ? `(${intakeState.customComplaint})` : ''}</p>
+          </div>
+
+          <div class="review-item">
+            <strong>${rev.hpiLabel}</strong>
+            <p>${hpiText}</p>
+          </div>
+
+          <div class="review-item">
+            <strong>${rev.pastLabel}</strong>
+            <p>${pastText}</p>
+          </div>
+
+          <div class="review-item">
+            <strong>${rev.medsLabel}</strong>
+            <p>${allergyText} | ${medsText}</p>
+          </div>
+
+          <div class="review-item">
+            <strong>${rev.familyLabel}</strong>
+            <p>${famText} | ${personalText}</p>
+          </div>
+
+          ${isAyushMode ? `
+            <div class="review-item" style="border-left-color: #b45309;">
+              <strong>${rev.ayushLabel}</strong>
+              <p>Prakriti: ${intakeState.ayush.prakriti || 'N/A'}, Agni: ${intakeState.ayush.agni || 'N/A'}, Koshtha: ${intakeState.ayush.koshtha || 'N/A'}, Nidra: ${intakeState.ayush.nidra || 'N/A'}</p>
+            </div>
+          ` : `
+            <div class="review-item">
+              <strong>${rev.rosLabel}</strong>
+              <p>${rosText}</p>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function buildHPITextLocalized(lang) {
+      const dict = I18N[lang];
+      const h = dict.hpi;
+      const parts = [];
+
+      if (intakeState.socrates.duration) {
+        const d = h.durationItems.find(x => x.id === intakeState.socrates.duration);
+        if (d) parts.push(lang === 'hi' ? `${d.label} से` : `Started ${d.label.toLowerCase()}`);
+      }
+
+      if (intakeState.socrates.character) {
+        const c = h.characterItems.find(x => x.id === intakeState.socrates.character);
+        if (c) parts.push(lang === 'hi' ? `${c.label} महसूस होता है` : `characterized by ${c.label.toLowerCase()}`);
+      }
+
+      if (intakeState.socrates.radiation && intakeState.socrates.radiation !== 'none') {
+        const r = h.radiationItems.find(x => x.id === intakeState.socrates.radiation);
+        if (r) parts.push(lang === 'hi' ? r.label : `with ${r.label.toLowerCase()}`);
+      }
+
+      if (intakeState.socrates.associations.length > 0) {
+        const assocLabels = intakeState.socrates.associations.map(id => {
+          const a = h.associationsItems.find(x => x.id === id);
+          return a ? a.label : id;
+        });
+        parts.push(lang === 'hi' ? `साथ में लक्षण: ${assocLabels.join(', ')}` : `associated with ${assocLabels.join(', ').toLowerCase()}`);
+      }
+
+      if (intakeState.socrates.severity) {
+        parts.push(lang === 'hi' ? `तीव्रता: ${intakeState.socrates.severity}/10` : `rated ${intakeState.socrates.severity}/10 in severity`);
+      }
+
+      return parts.length > 0 ? parts.join(". ") : (lang === 'hi' ? "कोई विशेष तीव्र लक्षण नहीं दर्ज किया गया" : "No acute aggravating factors elicited");
+    }
+
+    // ==========================================================
+    // SELECTION HANDLERS
+    // ==========================================================
+    function selectComplaint(id) {
+      intakeState.chiefComplaint = id;
+      const dict = I18N[currentLanguage];
+      const obj = dict.complaints.items.find(x => x.id === id);
+      intakeState.aiDetectedLabel = obj ? obj.label : '';
+      checkRedFlags();
+      renderCurrentStep();
+    }
+
+    function selectSocrates(field, id) {
+      intakeState.socrates[field] = id;
+      checkRedFlags();
+      renderCurrentStep();
+    }
+
+    function toggleAssociation(id) {
+      const idx = intakeState.socrates.associations.indexOf(id);
+      if (idx > -1) intakeState.socrates.associations.splice(idx, 1);
+      else intakeState.socrates.associations.push(id);
+      checkRedFlags();
+      renderCurrentStep();
+    }
+
+    function togglePastHistory(id) {
+      if (id === 'none_past') {
+        intakeState.pastHistory = ['none_past'];
+      } else {
+        intakeState.pastHistory = intakeState.pastHistory.filter(x => x !== 'none_past');
+        const idx = intakeState.pastHistory.indexOf(id);
+        if (idx > -1) intakeState.pastHistory.splice(idx, 1);
+        else intakeState.pastHistory.push(id);
+      }
+      renderCurrentStep();
+    }
+
+    function toggleAllergy(id) {
+      if (id === 'none_allergy') {
+        intakeState.drugAllergy = ['none_allergy'];
+      } else {
+        intakeState.drugAllergy = intakeState.drugAllergy.filter(x => x !== 'none_allergy');
+        const idx = intakeState.drugAllergy.indexOf(id);
+        if (idx > -1) intakeState.drugAllergy.splice(idx, 1);
+        else intakeState.drugAllergy.push(id);
+      }
+      renderCurrentStep();
+    }
+
+    function toggleFamilyHistory(id) {
+      if (id === 'none_family') {
+        intakeState.familyHistory = ['none_family'];
+      } else {
+        intakeState.familyHistory = intakeState.familyHistory.filter(x => x !== 'none_family');
+        const idx = intakeState.familyHistory.indexOf(id);
+        if (idx > -1) intakeState.familyHistory.splice(idx, 1);
+        else intakeState.familyHistory.push(id);
+      }
+      renderCurrentStep();
+    }
+
+    function toggleROS(id) {
+      if (id === 'none_ros') {
+        intakeState.ros = ['none_ros'];
+      } else {
+        intakeState.ros = intakeState.ros.filter(x => x !== 'none_ros');
+        const idx = intakeState.ros.indexOf(id);
+        if (idx > -1) intakeState.ros.splice(idx, 1);
+        else intakeState.ros.push(id);
+      }
+      renderCurrentStep();
+    }
+
+    // ==========================================================
+    // NAVIGATION & SUBMIT
+    // ==========================================================
+    function nextStep() {
+      const total = getTotalSteps();
+      if (currentStep < total - 1) {
+        currentStep++;
+        renderCurrentStep();
+      } else {
+        submitModuleA();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderCurrentStep();
+      }
+    }
+
+    function submitModuleA() {
+      const enDict = I18N.en;
+      const ccObj = enDict.complaints.items.find(x => x.id === intakeState.chiefComplaint);
+      let ccText = ccObj ? ccObj.label.replace(/[^\w\s/&-]/gi, '').trim() : '';
+      if (!ccText && intakeState.customComplaintEn) {
+        ccText = intakeState.customComplaintEn;
+      } else if (!ccText && intakeState.customComplaint) {
+        ccText = intakeState.customComplaint;
+      } else if (intakeState.customComplaintEn && ccObj) {
+        ccText += ` (${intakeState.customComplaintEn})`;
+      } else if (!ccText) {
+        ccText = 'Unspecified Complaint';
+      }
+
+      const hpiText = buildHPITextLocalized('en');
+
+      const pastLabels = intakeState.pastHistory.map(id => {
+        const item = enDict.past.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      if (intakeState.pastHistoryOther) pastLabels.push(intakeState.pastHistoryOther);
+      const pastText = pastLabels.join(", ") || "None reported";
+
+      const allergyLabels = intakeState.drugAllergy.map(id => {
+        const item = enDict.meds.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const allergyText = allergyLabels.join(", ") || "No known drug allergies";
+      const medText = intakeState.dailyMedications ? ` (Daily Meds: ${intakeState.dailyMedications})` : '';
+
+      const famLabels = intakeState.familyHistory.map(id => {
+        const item = enDict.family.familyItems.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const famText = famLabels.join(", ") || "Non-contributory";
+
+      const smokingObj = enDict.family.smokingOptions.find(x => x.id === intakeState.lifestyle.smoking);
+      const alcoholObj = enDict.family.alcoholOptions.find(x => x.id === intakeState.lifestyle.alcohol);
+      const personalText = `Tobacco: ${smokingObj ? smokingObj.label : intakeState.lifestyle.smoking}, Alcohol: ${alcoholObj ? alcoholObj.label : intakeState.lifestyle.alcohol}`;
+
+      const rosLabels = intakeState.ros.map(id => {
+        const item = enDict.ros.items.find(x => x.id === id);
+        return item ? item.label : id;
+      });
+      const rosText = rosLabels.join(", ") || "Negative for major constitutional signs";
+
+      const finalHistory = {
+        chiefComplaint: ccText,
+        hpi: hpiText,
+        pastHistory: pastText,
+        drugAllergy: allergyText + medText,
+        family: famText,
+        personal: personalText,
+        ros: rosText,
+        ayush: isAyushMode ? intakeState.ayush : undefined
+      };
+
+      const finalTriage = {
+        priority: intakeState.triagePriority,
+        redFlags: intakeState.redFlagsDetected
+      };
+
+      updatePatient({
+        history: finalHistory,
+        triage: finalTriage,
+        mode: isAyushMode ? 'AYUSH' : 'ALLOPATHY',
+        language: currentLanguage
+      });
+
+      console.log("Module A Complete. Saved Record:", getPatient());
+
+      // Redirect to Arush's Module B (Document Scan)
+      location.href = '../module-b-documents/index.html';
+    }
+
+    // ==========================================================
+    // INITIALIZATION
+    // ==========================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initSpeech();
+      
+      const existing = getPatient();
+      if (existing.language) {
+        currentLanguage = existing.language;
+        document.getElementById('langBtnEn').classList.toggle('active', currentLanguage === 'en');
+        document.getElementById('langBtnHi').classList.toggle('active', currentLanguage === 'hi');
+      }
+
+      renderCurrentStep();
+    });
+  </script>
+</body>
+</html>
