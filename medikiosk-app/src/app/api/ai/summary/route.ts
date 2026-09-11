@@ -2,7 +2,9 @@ import { StreamingTextResponse, GoogleGenerativeAIStream } from 'ai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest } from 'next/server';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY_SUMMARY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || ''
+);
 
 export async function POST(req: NextRequest) {
   const { chatHistory, documents } = await req.json();
