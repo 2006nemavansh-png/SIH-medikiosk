@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Serif, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -17,13 +17,14 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "MediKiosk",
   description: "AI medical assistant kiosk",
-  viewport: {
-    width: "device-width",
-    initialScale: 1.0,
-    maximumScale: 1.0,
-    userScalable: false,
-    viewportFit: "cover",
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 1.0,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

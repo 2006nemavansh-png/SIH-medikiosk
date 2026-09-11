@@ -11,12 +11,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    // Extract the mime type dynamically (e.g., image/jpeg or image/png)
-    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z]+);base64,/);
+    // Extract the mime type dynamically (e.g., image/jpeg, image/png, or application/pdf)
+    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z]+|application\/pdf);base64,/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-    
+
     // Clean up the base64 string
-    const base64Data = imageBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, '');
+    const base64Data = imageBase64.replace(/^data:(image\/[a-zA-Z]+|application\/pdf);base64,/, '');
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
