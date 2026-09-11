@@ -36,7 +36,7 @@ export default function WelcomePage() {
     if (typeof window !== "undefined") {
       localStorage.setItem("preferredLanguage", selectedLang);
     }
-    router.push("/history"); // Proceeding directly to history in this simplified Next.js version
+    router.push("/identify");
   };
 
   return (

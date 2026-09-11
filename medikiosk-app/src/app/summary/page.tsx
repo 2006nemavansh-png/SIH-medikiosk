@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCompletion } from "ai/react";
 import { supabase } from "@/lib/supabase";
+import { useAbhaSession } from "@/hooks/useAbhaSession";
 
 export default function DoctorSummaryPage() {
   const router = useRouter();
+  useAbhaSession();
   const [documents, setDocuments] = useState<any[]>([]);
   const [hasStarted, setHasStarted] = useState(false);
 

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAbhaSession } from '@/hooks/useAbhaSession';
 
 export default function DocumentScanner() {
   const router = useRouter();
+  useAbhaSession();
   const [scanState, setScanState] = useState<'upload' | 'scanning' | 'results'>('upload');
   const [previewImage, setPreviewImage] = useState<string>('');
   const [records, setRecords] = useState<any[]>([]);

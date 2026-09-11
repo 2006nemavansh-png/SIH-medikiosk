@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useAbhaSession } from "@/hooks/useAbhaSession";
 
 export default function HistoryWizardPage() {
   const router = useRouter();
+  useAbhaSession();
 
   const [lang, setLang] = useState<"en" | "hi">("en");
   const [isAyushMode, setIsAyushMode] = useState(false);
