@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, ensureAnonymousSession } from '@/lib/supabase';
 
 export default function DocumentScanner() {
   const router = useRouter();
@@ -35,6 +35,7 @@ export default function DocumentScanner() {
           // Save to Supabase if visitId is present
           const visitId = typeof window !== 'undefined' ? localStorage.getItem('currentVisitId') : null;
           if (visitId) {
+            await ensureAnonymousSession();
             await supabase.from('documents').insert({
               visit_id: visitId,
               document_type: data.documentType,

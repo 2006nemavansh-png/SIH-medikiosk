@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function WelcomePage() {
   const router = useRouter();
-  const [selectedLang, setSelectedLang] = useState<"en" | "hi" | "pa" | "ta">("en");
+  const [selectedLang, setSelectedLang] = useState<"en" | "hi">("en");
   const [isLoading, setIsLoading] = useState(false);
   const audioPulseRef = useRef<HTMLDivElement>(null);
 
@@ -98,22 +98,6 @@ export default function WelcomePage() {
             secondaryLabel="Hindi"
             selectedLang={selectedLang}
             onClick={() => setSelectedLang("hi")}
-          />
-          <LanguageButton
-            lang="pa"
-            icon="ੳ"
-            primaryLabel="ਪੰਜਾਬੀ"
-            secondaryLabel="Punjabi"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("pa")}
-          />
-          <LanguageButton
-            lang="ta"
-            icon="அ"
-            primaryLabel="தமிழ்"
-            secondaryLabel="Tamil"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("ta")}
           />
         </div>
 

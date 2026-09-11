@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCompletion } from "ai/react";
-import { supabase } from "@/lib/supabase";
+import { supabase, ensureAnonymousSession } from "@/lib/supabase";
 
 export default function DoctorSummaryPage() {
   const router = useRouter();
@@ -23,16 +23,18 @@ export default function DoctorSummaryPage() {
       const chatHistory = chatHistoryStr ? JSON.parse(chatHistoryStr) : [];
       
       if (visitId) {
-        // Fetch docs from Supabase
-        supabase
-          .from("documents")
-          .select("*")
-          .eq("visit_id", visitId)
-          .then(({ data }) => {
-            const docs = data || [];
-            setDocuments(docs);
-            complete("", { body: { chatHistory, documents: docs } });
-          });
+        // Fetch docs from Supabase (RLS restricts this to the current session's own rows)
+        ensureAnonymousSession().then(() =>
+          supabase
+            .from("documents")
+            .select("*")
+            .eq("visit_id", visitId)
+            .then(({ data }) => {
+              const docs = data || [];
+              setDocuments(docs);
+              complete("", { body: { chatHistory, documents: docs } });
+            })
+        );
       } else {
         complete("", { body: { chatHistory, documents: [] } });
       }

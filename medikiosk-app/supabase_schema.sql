@@ -3,6 +3,7 @@
 -- 1. Patients Table
 CREATE TABLE public.patients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     abha_number TEXT UNIQUE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -10,6 +11,7 @@ CREATE TABLE public.patients (
 -- 2. Visits Table
 CREATE TABLE public.visits (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
     chief_complaint TEXT,
     language TEXT DEFAULT 'en',
@@ -19,6 +21,7 @@ CREATE TABLE public.visits (
 -- 3. Documents Table
 CREATE TABLE public.documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     visit_id UUID NOT NULL REFERENCES public.visits(id) ON DELETE CASCADE,
     document_type TEXT,
     key_findings TEXT,
@@ -26,20 +29,36 @@ CREATE TABLE public.documents (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX idx_visits_patient_id ON public.visits(patient_id);
+CREATE INDEX idx_documents_visit_id ON public.documents(visit_id);
+CREATE INDEX idx_patients_user_id ON public.patients(user_id);
+CREATE INDEX idx_visits_user_id ON public.visits(user_id);
+CREATE INDEX idx_documents_user_id ON public.documents(user_id);
+
 -- Row Level Security (RLS)
--- For prototyping, we will enable RLS but allow anonymous access to all tables.
--- In production, you would restrict this to authenticated users only.
+--
+-- MediKiosk has no login screen, so every browser session on the kiosk is
+-- given a Supabase anonymous-auth identity (see src/lib/supabase.ts,
+-- ensureAnonymousSession()). Each row is stamped with that session's
+-- auth.uid() on insert, and every policy below scopes reads/writes to rows
+-- owned by the caller's own session. This is what stops one kiosk session
+-- (or anyone with the public anon key) from reading or altering another
+-- patient's records via the Supabase REST API directly.
+--
+-- Requirement: "Allow anonymous sign-ins" must be enabled for this project
+-- under Supabase Dashboard -> Authentication -> Sign In / Providers. This
+-- cannot be turned on via SQL.
 
 ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow anonymous read access on patients" ON public.patients FOR SELECT USING (true);
-CREATE POLICY "Allow anonymous insert access on patients" ON public.patients FOR INSERT WITH CHECK (true);
+CREATE POLICY "Owner can read own patients" ON public.patients FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Owner can insert own patients" ON public.patients FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Allow anonymous read access on visits" ON public.visits FOR SELECT USING (true);
-CREATE POLICY "Allow anonymous insert access on visits" ON public.visits FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow anonymous update access on visits" ON public.visits FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Owner can read own visits" ON public.visits FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Owner can insert own visits" ON public.visits FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Owner can update own visits" ON public.visits FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Allow anonymous read access on documents" ON public.documents FOR SELECT USING (true);
-CREATE POLICY "Allow anonymous insert access on documents" ON public.documents FOR INSERT WITH CHECK (true);
+CREATE POLICY "Owner can read own documents" ON public.documents FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Owner can insert own documents" ON public.documents FOR INSERT WITH CHECK (auth.uid() = user_id);
