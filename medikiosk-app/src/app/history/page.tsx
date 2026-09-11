@@ -29,6 +29,7 @@ export default function HistoryWizardPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [isListening, setIsListening] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
   // Initialize Language
@@ -49,12 +50,36 @@ export default function HistoryWizardPage() {
         recognitionRef.current.interimResults = false;
         
         recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          handleUserSubmit(transcript);
+          const transcript = event.results?.[0]?.[0]?.transcript;
           setIsListening(false);
+          if (transcript) {
+            setMicError(null);
+            handleUserSubmit(transcript);
+          } else {
+            setMicError("Didn't catch that. Please try again.");
+          }
         };
-        
-        recognitionRef.current.onerror = () => setIsListening(false);
+
+        recognitionRef.current.onerror = (event: any) => {
+          setIsListening(false);
+          switch (event?.error) {
+            case "not-allowed":
+            case "service-not-allowed":
+              setMicError("Microphone access is blocked. Please allow microphone permission for this site.");
+              break;
+            case "no-speech":
+              setMicError("Didn't hear anything. Please try again.");
+              break;
+            case "audio-capture":
+              setMicError("No microphone was found on this device.");
+              break;
+            case "network":
+              setMicError("Speech recognition needs an internet connection. Please check your connection.");
+              break;
+            default:
+              setMicError("Voice input failed. Please try again or use the options below.");
+          }
+        };
         recognitionRef.current.onend = () => setIsListening(false);
       }
     }
@@ -62,16 +87,21 @@ export default function HistoryWizardPage() {
 
   const toggleSpeech = () => {
     if (!recognitionRef.current) {
-      alert("Speech recognition not supported in this browser");
+      setMicError("Voice input isn't supported in this browser. Please use the options below.");
       return;
     }
+    setMicError(null);
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
       recognitionRef.current.lang = lang === "hi" ? "hi-IN" : "en-IN";
-      recognitionRef.current.start();
-      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch {
+        setMicError("Couldn't start voice input. Please try again.");
+      }
     }
   };
 
@@ -100,7 +130,8 @@ export default function HistoryWizardPage() {
 
       if (res.ok) {
         const data = await res.json();
-        setQuestionData(data);
+        // Always allow multi-select regardless of what the AI returns, per product requirement.
+        setQuestionData({ ...data, allowMultiple: true });
         setSelectedOptions([]);
         
         if (data.isFinished) {
@@ -233,6 +264,11 @@ export default function HistoryWizardPage() {
               >
                 <span className="material-symbols-outlined text-[48px]" style={{fontVariationSettings: "'FILL' 1"}}>mic</span>
               </button>
+              {micError && (
+                <p className="absolute top-[110px] w-[260px] text-center font-label-md text-label-md text-red-600">
+                  {micError}
+                </p>
+              )}
             </div>
           </div>
           
