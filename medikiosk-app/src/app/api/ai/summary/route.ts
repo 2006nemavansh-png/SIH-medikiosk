@@ -7,7 +7,11 @@ const genAI = new GoogleGenerativeAI(
 );
 
 export async function POST(req: NextRequest) {
-  const { chatHistory, documents } = await req.json();
+  const { chatHistory, documents, lang } = await req.json();
+
+  const languageInstruction = lang === 'hi'
+    ? `Write all narrative prose in fluent Hindi (Devanagari script). Keep section headings' standard medical abbreviations (CC, HPI, ROS) as-is, but translate their descriptive labels and all body text into Hindi.`
+    : `Write the entire note in English.`;
 
   const systemPrompt = `You are an expert clinical summarizer.
 You will be provided with the raw chat history of a patient's triage intake and the data extracted from their scanned medical documents.
@@ -20,6 +24,8 @@ Use standard medical formatting and terminology:
 - Relevant Past Medical History (from documents or chat)
 - Document / Lab Findings
 - AI Inferred Assessment / Triage Acuity (e.g., Routine, Urgent, Emergent)
+
+${languageInstruction}
 
 Return the output formatted in clean Markdown.`;
 
