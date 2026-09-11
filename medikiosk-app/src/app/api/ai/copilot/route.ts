@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     });
     
     const { object } = await generateObject({
-      model: google('gemini-2.5-flash') as any,
+      model: google('gemini-3.6-flash') as any,
       system: `You are an AI medical assistant for a patient kiosk. The patient is speaking to you. 
 You need to extract the relevant structured information from their statement based on the current step of the intake wizard.
 Current Step Index: ${currentStep}

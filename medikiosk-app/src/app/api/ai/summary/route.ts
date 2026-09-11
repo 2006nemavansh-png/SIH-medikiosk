@@ -39,7 +39,7 @@ Return the output formatted in clean Markdown.`;
   ];
 
   const response = await genAI
-    .getGenerativeModel({ model: 'gemini-2.5-flash' }) // Use flash since pro lacks free tier quota
+    .getGenerativeModel({ model: 'gemini-3.6-flash' }) // Use flash since pro lacks free tier quota
     .generateContentStream({ contents: promptMessages });
 
   const stream = GoogleGenerativeAIStream(response);

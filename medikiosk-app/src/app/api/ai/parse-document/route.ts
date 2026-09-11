@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // Clean up the base64 string
     const base64Data = imageBase64.replace(/^data:(image\/[a-zA-Z]+|application\/pdf);base64,/, '');
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const prompt = `
       You are an expert medical assistant. Analyze the provided medical document image (like a lab report, prescription, or clinical note).
