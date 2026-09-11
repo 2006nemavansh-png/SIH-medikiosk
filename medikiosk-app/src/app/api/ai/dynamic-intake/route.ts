@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateObject } from 'ai';
+import { createGroq } from '@ai-sdk/groq';
+import { z } from 'zod';
+
+const responseSchema = z.object({
+  questionTitle: z.string(),
+  questionSubtitle: z.string(),
+  options: z.array(z.object({
+    id: z.string(),
+    label: z.string(),
+    icon: z.string()
+  })),
+  allowMultiple: z.boolean(),
+  isFinished: z.boolean(),
+  redFlagDetected: z.string().nullable()
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +36,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const modeInstructions = isAyushMode 
+    const modeInstructions = isAyushMode
       ? `You are an AYUSH Ayurvedic Triage Assistant. You must ask questions related to:
          1. Chief Complaint
          2. Agni (Digestive Fire) and Ahara (Diet)
@@ -36,67 +51,52 @@ export async function POST(req: NextRequest) {
          5. Personal & Family History
          6. Review of Systems`;
 
-    const langInstructions = lang === 'hi' 
-      ? `CRITICAL: You MUST translate 'questionTitle', 'questionSubtitle', and the option 'label's into fluent Hindi (Devanagari script). Keep the 'id' and 'icon' in English.` 
+    const langInstructions = lang === 'hi'
+      ? `CRITICAL: You MUST translate 'questionTitle', 'questionSubtitle', and the option 'label's into fluent Hindi (Devanagari script). Keep the 'id' and 'icon' in English.`
       : `Output all text in English.`;
 
     const systemPrompt = `
       ${modeInstructions}
-      
+
       Your goal is to dynamically generate the next best question to ask the patient based on their previous answers.
       Each question should logically flow from the previous ones.
-      
+
       CRITICAL RULE: DO NOT ask a question that has already been asked in the conversation history!
       Always advance to the NEXT logical topic based on the triage protocol.
       For example, if you already know the chief complaint, ask about its duration or character. If you know the HPI, move to past medical history.
-      
-      Provide 2 to 6 multiple-choice options for the user to quickly select from. 
+
+      Provide 2 to 6 multiple-choice options for the user to quickly select from.
       Use STRICTLY lowercase valid Google Material Symbol names for the 'icon' field (e.g., 'sick', 'favorite', 'healing', 'medication', 'warning', 'schedule'). DO NOT invent uppercase names like THROAT_SORE or HEADACHE. Only lowercase strings and underscores!
-      
+
       If you have gathered enough information across all the required topics mentioned above, set 'isFinished' to true.
       If the conversation history contains 10 or more messages (5 questions), you MUST set 'isFinished' to true.
       If the user mentions an emergency symptom, set 'redFlagDetected' to a warning message. Otherwise, leave it null.
-      
-      ${langInstructions}
 
-      You must return ONLY a valid JSON object matching this schema:
-      {
-        "questionTitle": "string",
-        "questionSubtitle": "string",
-        "options": [{ "id": "string", "label": "string", "icon": "string" }],
-        "allowMultiple": boolean,
-        "isFinished": boolean,
-        "redFlagDetected": "string" | null
-      }
+      ${langInstructions}
     `;
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_INTAKE || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash", systemInstruction: systemPrompt });
+    const groq = createGroq({
+      apiKey: process.env.GROQ_API_KEY_INTAKE || process.env.GROQ_API_KEY,
+    });
 
-    // Format messages for gemini SDK
-    // Assistant uses 'model', User uses 'user'
-    const formattedMessages = messages.map((m: any) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
+    // Format messages for the ai SDK (assistant/user roles)
+    const formattedMessages: { role: 'user' | 'assistant'; content: string }[] = messages.map((m: any) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content
     }));
-    
-    // Add a final prompt to force the response
+
     formattedMessages.push({
       role: 'user',
-      parts: [{ text: 'Generate the next JSON state based on the conversation so far.' }]
+      content: 'Generate the next JSON state based on the conversation so far.'
     });
 
-    const result = await model.generateContent({
-      contents: formattedMessages,
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
+    const { object } = await generateObject({
+      model: groq('llama-3.3-70b-versatile') as any,
+      mode: 'json',
+      system: systemPrompt,
+      schema: responseSchema as any,
+      messages: formattedMessages
     });
-
-    const text = result.response.text();
-    let jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
-    let jsonString = jsonMatch ? jsonMatch[1] : text;
-    const object = JSON.parse(jsonString);
 
     return NextResponse.json(object);
   } catch (error: any) {

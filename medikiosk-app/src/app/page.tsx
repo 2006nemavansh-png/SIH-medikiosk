@@ -58,7 +58,7 @@ export default function WelcomePage() {
   };
 
   const handleProceed = () => {
-    router.push("/history"); // Proceeding directly to history in this simplified Next.js version
+    router.push("/identify");
   };
 
   return (

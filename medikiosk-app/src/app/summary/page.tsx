@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCompletion } from "ai/react";
 import { supabase } from "@/lib/supabase";
 import { useLanguage } from "@/lib/i18n";
+import { useAbhaSession } from "@/hooks/useAbhaSession";
 
 const ui = {
   en: {
@@ -33,6 +34,7 @@ const ui = {
 
 export default function DoctorSummaryPage() {
   const router = useRouter();
+  useAbhaSession();
   const { lang } = useLanguage();
   const t = ui[lang];
   const [documents, setDocuments] = useState<any[]>([]);

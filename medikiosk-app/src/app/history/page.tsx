@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
+import { useAbhaSession } from "@/hooks/useAbhaSession";
 
 const ui = {
   en: {
@@ -84,6 +85,7 @@ const defaultQuestion = {
 
 export default function HistoryWizardPage() {
   const router = useRouter();
+  useAbhaSession();
   const { lang, speak, isTranslating, setIsTranslating } = useLanguage();
   const t = ui[lang];
 

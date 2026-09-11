@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/i18n';
+import { useAbhaSession } from '@/hooks/useAbhaSession';
 
 const ui = {
   en: {
@@ -88,6 +89,7 @@ const ui = {
 
 export default function DocumentScanner() {
   const router = useRouter();
+  useAbhaSession();
   const { lang, speak, isTranslating, setIsTranslating } = useLanguage();
   const t = ui[lang];
   const [scanState, setScanState] = useState<'upload' | 'scanning' | 'results'>('upload');

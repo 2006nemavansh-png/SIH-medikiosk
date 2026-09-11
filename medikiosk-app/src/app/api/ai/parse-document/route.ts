@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_DOCUMENTS || process.env.GEMINI_API_KEY || '');
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY_DOCUMENTS || process.env.GROQ_API_KEY || 'placeholder-key',
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,15 +13,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    // Extract the mime type dynamically (e.g., image/jpeg, image/png, or application/pdf)
-    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z]+|application\/pdf);base64,/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-
-    // Clean up the base64 string
-    const base64Data = imageBase64.replace(/^data:(image\/[a-zA-Z]+|application\/pdf);base64,/, '');
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
-
+    // imageBase64 is already a data URI (e.g. data:image/jpeg;base64,...).
+    // Note: Groq's vision model expects an actual image, not a PDF — PDF
+    // uploads are not supported through this path.
     const prompt = `
       You are an expert medical assistant. Analyze the provided medical document image (like a lab report, prescription, or clinical note).
       Extract the following information in strict JSON format. If a field is not applicable, return null.
@@ -33,18 +29,21 @@ export async function POST(req: NextRequest) {
       Do not include any other text besides the JSON.
     `;
 
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType,
+    const completion = await groq.chat.completions.create({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: imageBase64 } },
+          ],
         },
-      },
-    ]);
+      ],
+    });
 
-    const responseText = result.response.text();
-    
+    const responseText = completion.choices[0]?.message?.content || '';
+
     // Try to parse the JSON output from the model
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     let parsedData = null;
@@ -53,7 +52,7 @@ export async function POST(req: NextRequest) {
       try {
         parsedData = JSON.parse(jsonMatch[0]);
       } catch (e) {
-        console.error('Failed to parse JSON from Gemini:', e);
+        console.error('Failed to parse JSON from Groq:', e);
       }
     }
 
