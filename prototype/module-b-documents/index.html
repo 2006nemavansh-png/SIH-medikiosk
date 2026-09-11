@@ -1,44 +1,495 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>MediKiosk — Documents</title>
-<link rel="stylesheet" href="../shared/style.css" />
-<script src="../shared/state.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediKiosk — Documents (v1.1)</title>
+  <link rel="stylesheet" href="../shared/style.css" />
+  <script src="../shared/state.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    /* Adding polished v1.1 styles */
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-light: #ccfbf1;
+      --accent: #0284c7;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .kiosk-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .kiosk-branding {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .kiosk-logo-badge {
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Wizard Card */
+    .wizard-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 480px;
+    }
+
+    .question-title {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .question-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Upload Area */
+    .upload-area {
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
+      background: #f8fafc;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--primary);
+      background: #f0fdfa;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .upload-area input[type="file"] {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .upload-subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Scanning state */
+    .scanning-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 0;
+    }
+
+    .scanner-box {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      background: #e2e8f0;
+      border-radius: var(--radius-sm);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scanner-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      opacity: 0.5;
+    }
+
+    .scanner-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      animation: scan-anim 2s infinite linear;
+    }
+
+    @keyframes scan-anim {
+      0% { top: 0; }
+      50% { top: 100%; }
+      100% { top: 0; }
+    }
+
+    /* Results Area */
+    .results-area {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .results-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .extracted-data-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-row:last-child {
+      border-bottom: none;
+    }
+
+    .data-label {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .data-value {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .ocr-raw-text {
+      font-family: monospace;
+      font-size: 12px;
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #475569;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    .btn {
+      padding: 14px 26px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-primary:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+  </style>
 </head>
 <body>
-  <div class="screen">
-    <h2>Scan your prior prescriptions / reports</h2>
-    <!-- Arush: replace with real upload UI + extraction of diagnosis/meds/lab
-         values from the OCR text (regex/keyword matching is fine for the demo).
-         Sample images to test against go in ../assets/sample-docs/ -->
-    <div class="card">
-      <input type="file" id="docInput" accept="image/*" />
-      <button class="primary" onclick="scan()">Scan document</button>
-      <p id="status"></p>
-      <pre id="ocrText"></pre>
+  <div class="kiosk-container">
+    
+    <!-- Top Header / Bar -->
+    <div class="top-bar">
+      <div class="kiosk-branding">
+        <span class="kiosk-logo-badge">MediKiosk</span>
+        <span style="font-weight: 600; font-size: 15px;">Module B: Documents</span>
+      </div>
     </div>
-    <button class="primary" onclick="submit()">Continue</button>
+
+    <!-- Main Wizard Card -->
+    <div class="wizard-card" id="wizardCard">
+      
+      <div>
+        <h2 class="question-title">Scan Prior Medical Records</h2>
+        <p class="question-subtitle">Upload prescriptions, lab reports, or discharge summaries for AI extraction.</p>
+      </div>
+
+      <!-- Upload State -->
+      <div id="uploadState" class="upload-area">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Tap to select or capture a document</div>
+        <div class="upload-subtext">Supports images (JPG, PNG)</div>
+        <input type="file" id="docInput" accept="image/*" onchange="handleFileSelect(event)" />
+      </div>
+
+      <!-- Scanning State -->
+      <div id="scanningState" class="scanning-container">
+        <div class="scanner-box">
+          <img id="previewImage" src="" alt="Document preview" />
+          <div class="scanner-line"></div>
+        </div>
+        <div style="font-weight: 600; color: var(--primary);">Analyzing document with OCR...</div>
+        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Extracting medications and lab values</div>
+      </div>
+
+      <!-- Results State -->
+      <div id="resultsState" class="results-area">
+        <div class="results-header">
+          ✅ Scan Complete
+        </div>
+        
+        <div class="extracted-data-card">
+          <div class="data-row">
+            <span class="data-label">Document Type:</span>
+            <span class="data-value" id="resDocType">Unknown</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Key Findings:</span>
+            <span class="data-value" id="resFindings">None</span>
+          </div>
+        </div>
+
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-top: 8px;">Raw Extracted Text:</div>
+        <div class="ocr-raw-text" id="ocrText"></div>
+
+        <button class="btn btn-secondary" onclick="resetScanner()" style="width: 100%;">
+          Scan Another Document
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="location.href='../history v1.1.html'">
+        ← Back to History
+      </button>
+      <div style="flex: 1;"></div>
+      <button id="nextBtn" class="btn btn-primary" onclick="submit()" disabled>
+        Continue to Summary →
+      </button>
+    </div>
+
   </div>
+
   <script>
     let lastText = '';
+    let extractedFields = {};
 
-    async function scan() {
-      const file = document.getElementById('docInput').files[0];
-      if (!file) { alert('Choose an image first'); return; }
-      document.getElementById('status').textContent = 'Scanning...';
-      const { data } = await Tesseract.recognize(file, 'eng');
-      lastText = data.text;
-      document.getElementById('ocrText').textContent = lastText;
-      document.getElementById('status').textContent = 'Done';
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('previewImage').src = e.target.result;
+        startScan(file);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function startScan(file) {
+      // Switch UI to scanning mode
+      document.getElementById('uploadState').style.display = 'none';
+      document.getElementById('scanningState').style.display = 'flex';
+      document.getElementById('resultsState').style.display = 'none';
+      document.getElementById('nextBtn').disabled = true;
+
+      try {
+        // Run OCR
+        const { data } = await Tesseract.recognize(file, 'eng');
+        lastText = data.text;
+        
+        // Simple extraction logic
+        extractInformation(lastText);
+        
+        // Update UI
+        document.getElementById('ocrText').textContent = lastText || "No text detected.";
+        document.getElementById('resDocType').textContent = extractedFields.docType || "Medical Record";
+        document.getElementById('resFindings').textContent = extractedFields.findings || "No specific metrics found";
+        
+        // Switch UI to results mode
+        document.getElementById('scanningState').style.display = 'none';
+        document.getElementById('resultsState').style.display = 'flex';
+        document.getElementById('nextBtn').disabled = false;
+        
+      } catch (error) {
+        alert("Error during document scanning. Please try again.");
+        resetScanner();
+      }
+    }
+
+    function extractInformation(text) {
+      const lowerText = text.toLowerCase();
+      extractedFields = {
+        docType: "General Record",
+        findings: ""
+      };
+
+      // Guess doc type
+      if (lowerText.includes('prescription') || lowerText.includes('rx') || lowerText.includes('clinic')) {
+        extractedFields.docType = "Prescription";
+      } else if (lowerText.includes('report') || lowerText.includes('lab') || lowerText.includes('pathology')) {
+        extractedFields.docType = "Lab Report";
+      }
+
+      // Look for some dummy keywords/patterns
+      const findings = [];
+      
+      // Simple BP regex e.g. 120/80
+      const bpMatch = text.match(/\b(\d{2,3})\s*\/\s*(\d{2,3})\s*(mmHg)?\b/i);
+      if (bpMatch) {
+        findings.push(`BP: ${bpMatch[1]}/${bpMatch[2]}`);
+      }
+
+      // Simple Glucose / Sugar regex
+      if (lowerText.includes('glucose') || lowerText.includes('sugar')) {
+        const sugarMatch = text.match(/\b(glucose|sugar)[\s:]+(\d{2,3})\b/i);
+        if (sugarMatch) findings.push(`Glucose: ${sugarMatch[2]}`);
+      }
+      
+      // Look for common meds
+      const meds = ['paracetamol', 'azithromycin', 'amoxicillin', 'pantoprazole', 'metformin'];
+      for (let med of meds) {
+        if (lowerText.includes(med)) {
+          findings.push(`Rx: ${med.charAt(0).toUpperCase() + med.slice(1)}`);
+        }
+      }
+
+      if (findings.length > 0) {
+        extractedFields.findings = findings.join(", ");
+      } else {
+        extractedFields.findings = "Text extracted. Needs human review.";
+      }
+    }
+
+    function resetScanner() {
+      document.getElementById('docInput').value = '';
+      document.getElementById('uploadState').style.display = 'block';
+      document.getElementById('scanningState').style.display = 'none';
+      document.getElementById('resultsState').style.display = 'none';
+      document.getElementById('nextBtn').disabled = true;
     }
 
     function submit() {
-      const patient = getPatient();
-      const documents = patient.documents || [];
-      documents.push({ type: 'unknown', extractedText: lastText, fields: {} });
-      updatePatient({ documents });
+      // Use existing state.js if available, otherwise just gracefully navigate
+      if (typeof getPatient === 'function' && typeof updatePatient === 'function') {
+        const patient = getPatient();
+        const documents = patient.documents || [];
+        documents.push({ 
+          type: extractedFields.docType, 
+          extractedText: lastText, 
+          fields: extractedFields 
+        });
+        updatePatient({ documents });
+      } else {
+        // Fallback save to local storage for demo
+        let docs = JSON.parse(localStorage.getItem('medikiosk_docs') || '[]');
+        docs.push({ type: extractedFields.docType, text: lastText, fields: extractedFields });
+        localStorage.setItem('medikiosk_docs', JSON.stringify(docs));
+      }
+      
       location.href = '../module-c-summary/index.html';
     }
   </script>
