@@ -1,8 +1,10 @@
-import { StreamingTextResponse, GoogleGenerativeAIStream } from 'ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { StreamingTextResponse, OpenAIStream } from 'ai';
+import Groq from 'groq-sdk';
 import { NextRequest } from 'next/server';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY || '',
+});
 
 export async function POST(req: NextRequest) {
   const { chatHistory, documents } = await req.json();
@@ -22,24 +24,23 @@ Use standard medical formatting and terminology:
 Return the output formatted in clean Markdown.`;
 
   const promptMessage = `Please generate a clinical summary based on the following data:
-      
+
       ## Patient Triage Chat Transcript:
       ${JSON.stringify(chatHistory, null, 2)}
-      
+
       ## Scanned Document Data:
       ${JSON.stringify(documents, null, 2)}
       `;
 
-  const promptMessages = [
-    { role: 'user', parts: [{ text: systemPrompt }] },
-    { role: 'model', parts: [{ text: 'Understood. I will follow these instructions.' }] },
-    { role: 'user', parts: [{ text: promptMessage }] }
-  ];
+  const response = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: promptMessage },
+    ],
+    stream: true,
+  });
 
-  const response = await genAI
-    .getGenerativeModel({ model: 'gemini-2.5-flash' }) // Use flash since pro lacks free tier quota
-    .generateContentStream({ contents: promptMessages });
-
-  const stream = GoogleGenerativeAIStream(response);
+  const stream = OpenAIStream(response);
   return new StreamingTextResponse(stream);
 }

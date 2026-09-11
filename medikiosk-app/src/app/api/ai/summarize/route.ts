@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGroq } from '@ai-sdk/groq';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -17,12 +17,12 @@ Include details such as:
 
 Output ONLY the clinical summary text in ${language === 'hi' ? 'Hindi' : language === 'pa' ? 'Punjabi' : language === 'ta' ? 'Tamil' : 'English'}. Do not include any conversational filler.`;
 
-    const google = createGoogleGenerativeAI({
-      apiKey: process.env.GEMINI_API_KEY_SUMMARY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    const groq = createGroq({
+      apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY,
     });
-    
+
     const { text } = await generateText({
-      model: google('gemini-2.5-flash') as any,
+      model: groq('llama-3.3-70b-versatile') as any,
       system: systemPrompt,
       messages: messages.filter((m: any) => m.role === 'user' || m.role === 'assistant'),
     });
