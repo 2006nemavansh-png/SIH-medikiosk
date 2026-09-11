@@ -13,7 +13,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 });
     }
 
-    // imageBase64 is already a data URI (e.g. data:image/jpeg;base64,...)
+    // imageBase64 is already a data URI (e.g. data:image/jpeg;base64,...).
+    // Note: Groq's vision model expects an actual image, not a PDF — PDF
+    // uploads are not supported through this path.
     const prompt = `
       You are an expert medical assistant. Analyze the provided medical document image (like a lab report, prescription, or clinical note).
       Extract the following information in strict JSON format. If a field is not applicable, return null.

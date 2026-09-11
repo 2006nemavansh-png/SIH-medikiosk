@@ -12,7 +12,7 @@ export default function DoctorSummaryPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [hasStarted, setHasStarted] = useState(false);
 
-  const { completion, complete, isLoading } = useCompletion({
+  const { completion, complete, isLoading, error } = useCompletion({
     api: "/api/ai/summary",
   });
 
@@ -68,7 +68,11 @@ export default function DoctorSummaryPage() {
           </div>
 
           <div className="prose prose-blue max-w-none text-gray-700">
-            {completion ? (
+            {error ? (
+              <p className="text-red-600 font-semibold">
+                Failed to generate the clinical summary: {error.message}
+              </p>
+            ) : completion ? (
               <div dangerouslySetInnerHTML={{ __html: formatMarkdown(completion) }} />
             ) : (
               <p className="text-gray-400 italic">Generating summary...</p>
