@@ -27,6 +27,7 @@ export default function HistoryWizardPage() {
 
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -87,6 +88,7 @@ export default function HistoryWizardPage() {
 
   const fetchNextQuestion = async (newMessages: any[]) => {
     setIsLoading(true);
+    setErrorMessage(null);
     try {
       const res = await fetch("/api/ai/dynamic-intake", {
         method: "POST",
@@ -102,7 +104,7 @@ export default function HistoryWizardPage() {
         const data = await res.json();
         setQuestionData(data);
         setSelectedOptions([]);
-        
+
         if (data.isFinished) {
           // Save chat history to localStorage for the summary phase
           localStorage.setItem("chatHistory", JSON.stringify(newMessages));
@@ -111,9 +113,13 @@ export default function HistoryWizardPage() {
         } else {
           speakText(data.questionTitle);
         }
+      } else {
+        const data = await res.json().catch(() => null);
+        setErrorMessage(data?.error || "Something went wrong while fetching the next question. Please try again.");
       }
     } catch (error) {
       console.error(error);
+      setErrorMessage("Unable to reach the AI service. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -219,6 +225,12 @@ export default function HistoryWizardPage() {
             <p className="font-body-lg text-body-lg text-center text-on-surface-variant mb-10 relative z-10">
               {isLoading ? "Please wait..." : questionData.questionSubtitle}
             </p>
+
+            {errorMessage && (
+              <div className="w-full max-w-sm mb-6 px-4 py-3 rounded-xl bg-[#E8B4B8]/40 border border-[#E8B4B8] text-center relative z-10">
+                <p className="font-label-lg text-label-lg text-[#7A2E2E]">{errorMessage}</p>
+              </div>
+            )}
             
             <div className="relative flex items-center justify-center mb-12">
               {isListening && (

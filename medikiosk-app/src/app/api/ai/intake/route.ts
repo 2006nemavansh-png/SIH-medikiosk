@@ -26,7 +26,7 @@ ${isAyushMode ? 'The patient has selected AYUSH (Ayurvedic/Homeopathic) mode, so
   ];
 
   const response = await genAI
-    .getGenerativeModel({ model: 'gemini-2.5-flash' })
+    .getGenerativeModel({ model: 'gemini-3.6-flash' })
     .generateContentStream({ contents: promptMessages });
 
   const stream = GoogleGenerativeAIStream(response);

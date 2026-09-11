@@ -22,7 +22,7 @@ Output ONLY the clinical summary text in ${language === 'hi' ? 'Hindi' : languag
     });
     
     const { text } = await generateText({
-      model: google('gemini-2.5-flash') as any,
+      model: google('gemini-3.6-flash') as any,
       system: systemPrompt,
       messages: messages.filter((m: any) => m.role === 'user' || m.role === 'assistant'),
     });
