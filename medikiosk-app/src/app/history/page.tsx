@@ -85,7 +85,7 @@ const defaultQuestion = {
 
 export default function HistoryWizardPage() {
   const router = useRouter();
-  useAbhaSession();
+  const { session } = useAbhaSession();
   const { lang, speak, isTranslating, setIsTranslating } = useLanguage();
   const t = ui[lang];
 
@@ -207,10 +207,22 @@ export default function HistoryWizardPage() {
         setIsDynamic(true);
         setSelectedOptions([]);
 
+        // Persist intake progress to the visit row so the doctor dashboard
+        // can see it live, from any device (not just this kiosk's browser).
+        fetch("/api/visits/current", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatHistory: newMessages,
+            language: lang,
+            isFinished: !!data.isFinished,
+            ...(newMessages.length === 2 ? { chiefComplaint: newMessages[1].content } : {}),
+          }),
+        }).catch((error) => console.error("Failed to save visit progress:", error));
+
         if (data.isFinished) {
-          // Save chat history to localStorage for the summary phase
+          // Keep localStorage as a fallback for the summary/documents pages.
           localStorage.setItem("chatHistory", JSON.stringify(newMessages));
-          // Mock submission for now (since we don't have a real DB save in this step)
           router.push("/documents");
         } else {
           speak(data.questionTitle);

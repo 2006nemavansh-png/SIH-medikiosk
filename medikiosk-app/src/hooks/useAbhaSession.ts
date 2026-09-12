@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface AbhaSession {
   patientId: string;
   abhaNumber: string;
+  visitId: string;
 }
 
 /**

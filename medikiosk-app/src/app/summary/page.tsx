@@ -34,7 +34,7 @@ const ui = {
 
 export default function DoctorSummaryPage() {
   const router = useRouter();
-  useAbhaSession();
+  const { session } = useAbhaSession();
   const { lang } = useLanguage();
   const t = ui[lang];
   const [documents, setDocuments] = useState<any[]>([]);
@@ -46,30 +46,24 @@ export default function DoctorSummaryPage() {
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !hasStarted) {
+    if (typeof window !== "undefined" && !hasStarted && session?.visitId) {
       setHasStarted(true);
-      const visitId = localStorage.getItem("currentVisitId");
-      const chatHistoryStr = localStorage.getItem("chatHistory");
+      const visitId = session.visitId;
+      const fallbackChatHistoryStr = localStorage.getItem("chatHistory");
+      const fallbackChatHistory = fallbackChatHistoryStr ? JSON.parse(fallbackChatHistoryStr) : [];
 
-      const chatHistory = chatHistoryStr ? JSON.parse(chatHistoryStr) : [];
-
-      if (visitId) {
-        // Fetch docs from Supabase
-        supabase
-          .from("documents")
-          .select("*")
-          .eq("visit_id", visitId)
-          .then(({ data }) => {
-            const docs = data || [];
-            setDocuments(docs);
-            complete("", { body: { chatHistory, documents: docs, lang } });
-          });
-      } else {
-        complete("", { body: { chatHistory, documents: [], lang } });
-      }
+      Promise.all([
+        supabase.from("visits").select("chat_history").eq("id", visitId).maybeSingle(),
+        supabase.from("documents").select("*").eq("visit_id", visitId),
+      ]).then(([{ data: visit }, { data: docsData }]) => {
+        const chatHistory = visit?.chat_history || fallbackChatHistory;
+        const docs = docsData || [];
+        setDocuments(docs);
+        complete("", { body: { chatHistory, documents: docs, lang } });
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [complete, hasStarted]);
+  }, [complete, hasStarted, session?.visitId]);
 
   // Regenerate the note in the newly selected language whenever the global language changes.
   useEffect(() => {

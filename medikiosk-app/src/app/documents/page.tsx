@@ -89,7 +89,7 @@ const ui = {
 
 export default function DocumentScanner() {
   const router = useRouter();
-  useAbhaSession();
+  const { session } = useAbhaSession();
   const { lang, speak, isTranslating, setIsTranslating } = useLanguage();
   const t = ui[lang];
   const [scanState, setScanState] = useState<'upload' | 'scanning' | 'results'>('upload');
@@ -150,11 +150,10 @@ export default function DocumentScanner() {
           const newRecord = { ...data, timestamp: new Date().toLocaleDateString() };
           setRecords(prev => [...prev, newRecord]);
 
-          // Save to Supabase if visitId is present
-          const visitId = typeof window !== 'undefined' ? localStorage.getItem('currentVisitId') : null;
-          if (visitId) {
+          // Save to Supabase against the current session's visit
+          if (session?.visitId) {
             await supabase.from('documents').insert({
-              visit_id: visitId,
+              visit_id: session.visitId,
               document_type: data.documentType,
               key_findings: data.keyFindings,
               extracted_text: data.extractedText

@@ -7,6 +7,7 @@ export interface SessionPayload {
   sessionId: string;
   patientId: string;
   abhaNumber: string;
+  visitId: string;
 }
 
 export async function setSessionCookie(payload: SessionPayload): Promise<void> {

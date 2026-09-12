@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const profile = resolveQrPayload(qrPayload);
-    const { patientId } = await establishPatientSession(profile);
-    return NextResponse.json({ patientId, abhaNumber: profile.abhaNumber });
+    const { patientId, visitId } = await establishPatientSession(profile);
+    return NextResponse.json({ patientId, visitId, abhaNumber: profile.abhaNumber });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to read ABHA QR code";
     return NextResponse.json({ error: message }, { status: 400 });
