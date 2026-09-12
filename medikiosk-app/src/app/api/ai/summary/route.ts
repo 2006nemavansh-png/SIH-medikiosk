@@ -1,12 +1,18 @@
 import { StreamingTextResponse, OpenAIStream } from 'ai';
 import Groq from 'groq-sdk';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getDoctorSessionCookie } from '@/lib/doctorSession';
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY || 'placeholder-key',
 });
 
 export async function POST(req: NextRequest) {
+  const doctorSession = await getDoctorSessionCookie();
+  if (!doctorSession) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
   const { chatHistory, documents, lang } = await req.json();
 
   const languageInstruction = lang === 'hi'

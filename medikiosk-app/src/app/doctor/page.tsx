@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useDoctorSession } from "@/hooks/useDoctorSession";
 
 interface QueuePatient {
   id: string;
@@ -58,6 +60,8 @@ interface VisitDetail {
 }
 
 export default function DoctorDashboardPage() {
+  const router = useRouter();
+  const { session: doctorSession, isChecking: isCheckingDoctorSession } = useDoctorSession();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [visit, setVisit] = useState<VisitDetail | null>(null);
@@ -90,8 +94,8 @@ export default function DoctorDashboardPage() {
   }, []);
 
   useEffect(() => {
-    loadQueue();
-  }, [loadQueue]);
+    if (doctorSession) loadQueue();
+  }, [doctorSession, loadQueue]);
 
   const selectVisit = useCallback(async (id: string) => {
     setSelectedId(id);
@@ -177,8 +181,16 @@ export default function DoctorDashboardPage() {
     }
   };
 
-  const inConsultation = queue.find((q) => q.status === "in_consultation" && q.id !== selectedId);
+  const handleLogout = async () => {
+    await fetch("/api/auth/doctor/logout", { method: "POST" });
+    router.replace("/doctor/login");
+  };
+
   const waitingQueue = queue.filter((q) => q.id !== selectedId);
+
+  if (isCheckingDoctorSession || !doctorSession) {
+    return null;
+  }
 
   return (
     <div className="bg-surface font-body text-on-surface antialiased min-h-screen">
@@ -261,12 +273,26 @@ export default function DoctorDashboardPage() {
             <div className="h-8 w-px bg-surface-variant"></div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="font-label text-sm font-semibold text-on-surface leading-tight">Dr. Arvind Sharma</p>
+                <p className="font-label text-sm font-semibold text-on-surface leading-tight">{doctorSession.name}</p>
                 <p className="font-label text-xs text-on-surface-variant">Senior Physician (General)</p>
               </div>
               <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-label text-xs font-bold">
-                AS
+                {doctorSession.name
+                  .replace(/^Dr\.?\s*/i, "")
+                  .split(" ")
+                  .filter(Boolean)
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase()}
               </div>
+              <button
+                onClick={handleLogout}
+                title="Sign out"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">logout</span>
+              </button>
             </div>
           </div>
         </header>
@@ -416,9 +442,20 @@ export default function DoctorDashboardPage() {
                           </div>
                           <h2 className="font-headline text-lg font-bold text-on-surface">AI Kiosk Triage Intake</h2>
                         </div>
-                        <span className="font-label text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">
-                          {visit.isFinished ? "Intake Complete" : "Intake In Progress"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-label text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">
+                            {visit.isFinished ? "Intake Complete" : "Intake In Progress"}
+                          </span>
+                          <a
+                            href={`/doctor/summary?visitId=${visit.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-label text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container hover:opacity-90 transition-opacity flex items-center gap-1"
+                          >
+                            <span className="material-symbols-outlined text-sm">clinical_notes</span>
+                            View AI Summary
+                          </a>
+                        </div>
                       </div>
 
                       <div className="p-4 rounded-xl bg-surface-container-low mb-4">

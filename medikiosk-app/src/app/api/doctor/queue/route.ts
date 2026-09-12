@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getDoctorSessionCookie } from "@/lib/doctorSession";
 
 /**
  * OPD queue for the doctor dashboard: every visit that isn't finished yet,
  * oldest check-in first, with its patient's demographics attached.
  */
 export async function GET() {
+  const doctorSession = await getDoctorSessionCookie();
+  if (!doctorSession) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const { data, error } = await supabase
     .from("visits")
     .select(

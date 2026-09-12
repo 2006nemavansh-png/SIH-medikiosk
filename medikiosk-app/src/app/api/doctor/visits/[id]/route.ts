@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getDoctorSessionCookie } from "@/lib/doctorSession";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const doctorSession = await getDoctorSessionCookie();
+  if (!doctorSession) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const { data: visit, error: visitError } = await supabase
@@ -58,6 +64,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const doctorSession = await getDoctorSessionCookie();
+  if (!doctorSession) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
   const { id } = await params;
   const body = await req.json();
   const update: Record<string, unknown> = {};

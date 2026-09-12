@@ -37,7 +37,7 @@ const ui = {
     needAssistance: "Need Kiosk Assistance?",
     assistanceCopy: "Hospital Sahayak desk staff can help scan hard copies of previous discharge summaries without leaving your place.",
     skipStep: "Skip this step",
-    continueToSummary: "Continue to Summary",
+    continueToSummary: "Finish Check-In",
     home: "Home",
     documents: "Documents",
     profile: "Profile",
@@ -76,7 +76,7 @@ const ui = {
     needAssistance: "कियोस्क सहायता चाहिए?",
     assistanceCopy: "अस्पताल सहायक डेस्क कर्मचारी आपकी जगह छोड़े बिना पिछले डिस्चार्ज सारांश की हार्ड कॉपी स्कैन करने में मदद कर सकते हैं।",
     skipStep: "यह चरण छोड़ें",
-    continueToSummary: "सारांश पर जारी रखें",
+    continueToSummary: "चेक-इन पूरा करें",
     home: "होम",
     documents: "दस्तावेज़",
     profile: "प्रोफ़ाइल",
@@ -385,11 +385,11 @@ export default function DocumentScanner() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-            <button onClick={() => router.push('/summary')} className="w-full sm:flex-1 min-h-[56px] px-6 py-3 rounded-xl bg-[#efe7e1] hover:bg-[#e9e1db] text-[#1e1b18] font-['Plus_Jakarta_Sans'] text-base font-semibold flex items-center justify-center gap-2 transition-colors" type="button">
+            <button onClick={() => router.push('/checked-in')} className="w-full sm:flex-1 min-h-[56px] px-6 py-3 rounded-xl bg-[#efe7e1] hover:bg-[#e9e1db] text-[#1e1b18] font-['Plus_Jakarta_Sans'] text-base font-semibold flex items-center justify-center gap-2 transition-colors" type="button">
               <span className="material-symbols-outlined text-[20px]">redo</span>
               <span>{t.skipStep}</span>
             </button>
-            <button onClick={() => router.push('/summary')} className="w-full sm:flex-1 min-h-[56px] px-6 py-3 rounded-xl bg-[#4a6545] hover:bg-[#395334] text-white font-['Plus_Jakarta_Sans'] text-base font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all" type="button">
+            <button onClick={() => router.push('/checked-in')} className="w-full sm:flex-1 min-h-[56px] px-6 py-3 rounded-xl bg-[#4a6545] hover:bg-[#395334] text-white font-['Plus_Jakarta_Sans'] text-base font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all" type="button">
               <span>{t.continueToSummary}</span>
               <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
             </button>
