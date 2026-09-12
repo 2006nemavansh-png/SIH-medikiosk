@@ -1,9 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 
 export default function TranslateButton() {
   const { lang, toggleLang, isTranslating } = useLanguage();
+  const pathname = usePathname();
+
+  // The doctor dashboard is a clinician-facing tool, not part of the patient kiosk flow.
+  if (pathname?.startsWith("/doctor")) {
+    return null;
+  }
 
   return (
     <button
