@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     });
 
     const { object } = await generateObject({
-      model: groq('llama-3.3-70b-versatile') as any,
+      model: groq('llama-3.1-8b-instant') as any,
       mode: 'json',
       system: systemPrompt,
       schema: responseSchema as any,
