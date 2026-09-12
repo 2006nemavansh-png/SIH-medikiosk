@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     });
 
     const { object } = await generateObject({
-      model: groq('llama-3.3-70b-versatile') as any,
+      model: groq('openai/gpt-oss-120b') as any,
       mode: 'json',
       system: `You are an AI medical assistant for a patient kiosk. The patient is speaking to you. 
 You need to extract the relevant structured information from their statement based on the current step of the intake wizard.
