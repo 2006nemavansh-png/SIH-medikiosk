@@ -22,7 +22,7 @@ Output ONLY the clinical summary text in ${language === 'hi' ? 'Hindi' : languag
     });
 
     const { text } = await generateText({
-      model: groq('openai/gpt-oss-120b') as any,
+      model: groq('llama-3.1-8b-instant') as any,
       system: systemPrompt,
       messages: messages.filter((m: any) => m.role === 'user' || m.role === 'assistant'),
     });

@@ -26,7 +26,7 @@ ${isAyushMode ? 'The patient has selected AYUSH (Ayurvedic/Homeopathic) mode, so
   ];
 
   const response = await groq.chat.completions.create({
-    model: 'openai/gpt-oss-120b',
+    model: 'llama-3.1-8b-instant',
     messages: promptMessages,
     stream: true,
   });
