@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Serif, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n";
+import TranslateButton from "@/components/TranslateButton";
 
 const notoSerif = Noto_Serif({
   variable: "--font-noto-serif",
@@ -41,7 +43,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full flex flex-col bg-[#F5F1E8] pt-safe pb-safe pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-        {children}
+        <LanguageProvider>
+          {children}
+          <TranslateButton />
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY_DOCUMENTS || process.env.GROQ_API_KEY || '',
+  apiKey: process.env.GROQ_API_KEY_DOCUMENTS || process.env.GROQ_API_KEY || 'placeholder-key',
 });
 
 export async function POST(req: NextRequest) {

@@ -11,5 +11,6 @@ export async function GET() {
   return NextResponse.json({
     patientId: session.patientId,
     abhaNumber: session.abhaNumber,
+    visitId: session.visitId,
   });
 }

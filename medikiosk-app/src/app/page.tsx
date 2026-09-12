@@ -1,16 +1,41 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/lib/i18n";
+
+const content = {
+  en: {
+    subtitle: "Please select your preferred language to begin.",
+    listen: "Listen to Instructions",
+    consentPrefix: "By proceeding, you agree to our",
+    consentLink: "consent guidelines",
+    start: "Start",
+    spoken: "Welcome to MediKiosk. Please select your preferred language to begin.",
+  },
+  hi: {
+    subtitle: "कृपया आरंभ करने के लिए अपनी पसंदीदा भाषा चुनें।",
+    listen: "निर्देश सुनें",
+    consentPrefix: "आगे बढ़ने पर, आप हमारे",
+    consentLink: "सहमति दिशानिर्देशों",
+    start: "शुरू करें",
+    spoken: "मेडीकियोस्क में आपका स्वागत है। कृपया आरंभ करने के लिए अपनी पसंदीदा भाषा चुनें।",
+  },
+};
 
 export default function WelcomePage() {
   const router = useRouter();
-  const [selectedLang, setSelectedLang] = useState<"en" | "hi" | "pa" | "ta">("en");
-  const [isLoading, setIsLoading] = useState(false);
+  const { lang, setLang, speak } = useLanguage();
   const audioPulseRef = useRef<HTMLDivElement>(null);
+  const t = content[lang];
+
+  useEffect(() => {
+    speak(t.spoken);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   const handleAudioPrompt = () => {
+    speak(t.spoken);
     if (audioPulseRef.current) {
       audioPulseRef.current.classList.remove("opacity-0");
       const animation = audioPulseRef.current.animate(
@@ -33,16 +58,13 @@ export default function WelcomePage() {
   };
 
   const handleProceed = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("preferredLanguage", selectedLang);
-    }
     router.push("/identify");
   };
 
   return (
     <main className="flex-1">
       <div className="flex flex-col w-full min-h-full px-[var(--spacing-margin-mobile)] pb-[var(--spacing-margin-desktop)] gap-[var(--spacing-stack-gap)] relative overflow-hidden">
-        
+
         {/* Hero Illustration */}
         <div className="w-full aspect-[4/3] max-h-[300px] rounded-[8px] bg-(--color-surface-container) shadow-sm flex items-center justify-center overflow-hidden shrink-0 mt-[var(--spacing-margin-mobile)] relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -61,7 +83,7 @@ export default function WelcomePage() {
             Welcome / स्वागत है
           </h1>
           <p className="font-body-lg text-[var(--text-body-lg)] text-(--color-on-surface-variant) max-w-[280px]">
-            Please select your preferred language to begin.
+            {t.subtitle}
           </p>
 
           {/* Audio Button */}
@@ -77,7 +99,7 @@ export default function WelcomePage() {
               volume_up
             </span>
             <span className="relative z-10 font-label-lg text-[var(--text-label-lg)] whitespace-nowrap">
-              Listen to Instructions
+              {t.listen}
             </span>
           </button>
         </div>
@@ -88,45 +110,29 @@ export default function WelcomePage() {
             lang="en"
             icon="A"
             primaryLabel="English"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("en")}
+            selectedLang={lang}
+            onClick={() => setLang("en")}
           />
           <LanguageButton
             lang="hi"
             icon="अ"
             primaryLabel="हिन्दी"
             secondaryLabel="Hindi"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("hi")}
-          />
-          <LanguageButton
-            lang="pa"
-            icon="ੳ"
-            primaryLabel="ਪੰਜਾਬੀ"
-            secondaryLabel="Punjabi"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("pa")}
-          />
-          <LanguageButton
-            lang="ta"
-            icon="அ"
-            primaryLabel="தமிழ்"
-            secondaryLabel="Tamil"
-            selectedLang={selectedLang}
-            onClick={() => setSelectedLang("ta")}
+            selectedLang={lang}
+            onClick={() => setLang("hi")}
           />
         </div>
 
         {/* Bottom Actions & Consent */}
         <div className="flex flex-col gap-[var(--spacing-stack-gap)] mt-auto pt-[var(--spacing-stack-gap)] w-full">
           <p className="text-center font-body-md text-[var(--text-body-md)] text-(--color-on-surface-variant) px-4">
-            By proceeding, you agree to our <button className="text-(--color-primary) font-bold active:opacity-70">consent guidelines</button>.
+            {t.consentPrefix} <button className="text-(--color-primary) font-bold active:opacity-70">{t.consentLink}</button>.
           </p>
           <button
             onClick={handleProceed}
             className="w-full h-[64px] bg-[#A8C69F] text-[#3E3A36] rounded-[8px] flex items-center justify-center gap-2 shadow-md active:shadow-sm active:scale-[0.99] transition-all touch-manipulation"
           >
-            <span className="font-headline-md text-[var(--text-headline-md)] font-semibold">Start / शुरू करें</span>
+            <span className="font-headline-md text-[var(--text-headline-md)] font-semibold">{t.start}</span>
             <span
               className="material-symbols-outlined text-[28px] text-[#3E3A36]"
               style={{ fontVariationSettings: "'FILL' 1" }}

@@ -1,13 +1,23 @@
 import { StreamingTextResponse, OpenAIStream } from 'ai';
 import Groq from 'groq-sdk';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getDoctorSessionCookie } from '@/lib/doctorSession';
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY || '',
+  apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY || 'placeholder-key',
 });
 
 export async function POST(req: NextRequest) {
-  const { chatHistory, documents } = await req.json();
+  const doctorSession = await getDoctorSessionCookie();
+  if (!doctorSession) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const { chatHistory, documents, lang } = await req.json();
+
+  const languageInstruction = lang === 'hi'
+    ? `Write all narrative prose in fluent Hindi (Devanagari script). Keep section headings' standard medical abbreviations (CC, HPI, ROS) as-is, but translate their descriptive labels and all body text into Hindi.`
+    : `Write the entire note in English.`;
 
   const systemPrompt = `You are an expert clinical summarizer.
 You will be provided with the raw chat history of a patient's triage intake and the data extracted from their scanned medical documents.
@@ -20,6 +30,8 @@ Use standard medical formatting and terminology:
 - Relevant Past Medical History (from documents or chat)
 - Document / Lab Findings
 - AI Inferred Assessment / Triage Acuity (e.g., Routine, Urgent, Emergent)
+
+${languageInstruction}
 
 Return the output formatted in clean Markdown.`;
 
