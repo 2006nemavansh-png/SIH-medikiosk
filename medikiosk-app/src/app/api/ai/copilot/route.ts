@@ -1,11 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateObject } from 'ai';
-import { createGroq } from '@ai-sdk/groq';
+import Groq from 'groq-sdk';
 import { z } from 'zod';
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY || '',
+});
+
+function describeSchema(schema: z.ZodObject<any>): string {
+  return Object.entries(schema.shape).map(([key, val]: [string, any]) => {
+    const desc = val.description ? ` - ${val.description}` : '';
+    const def = val._def?.innerType?._def ?? val._def;
+    let typeHint = '';
+    if (def?.typeName === 'ZodEnum') typeHint = ` (one of: ${def.values.join(', ')}, or null)`;
+    else if (def?.typeName === 'ZodArray') typeHint = ' (array)';
+    else if (def?.typeName === 'ZodNumber') typeHint = ' (number)';
+    else if (def?.typeName === 'ZodString') typeHint = ' (string)';
+    return `- "${key}"${typeHint}${desc}`;
+  }).join('\n');
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { input, currentStep, isAyushMode, lang, intakeState } = await req.json();
+    const { input, currentStep, isAyushMode, lang } = await req.json();
 
     if (!input) {
       return NextResponse.json({ error: 'No input provided' }, { status: 400 });
@@ -83,27 +99,32 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const groq = createGroq({
-      apiKey: process.env.GROQ_API_KEY,
-    });
-
-    const { object } = await generateObject({
-      model: groq('llama-3.1-8b-instant') as any,
-      mode: 'json',
-      system: `You are an AI medical assistant for a patient kiosk. The patient is speaking to you. 
+    const completion = await groq.chat.completions.create({
+      model: 'openai/gpt-oss-120b',
+      response_format: { type: 'json_object' },
+      reasoning_format: 'hidden',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an AI medical assistant for a patient kiosk. The patient is speaking to you.
 You need to extract the relevant structured information from their statement based on the current step of the intake wizard.
 Current Step Index: ${currentStep}
 Is AYUSH Mode: ${isAyushMode}
 Language: ${lang}
-Only output the fields that can be confidently inferred from the input. For fields not mentioned, return null or empty arrays.`,
-      schema: schema as any,
-      messages: [
+Only output the fields that can be confidently inferred from the input. For fields not mentioned, return null or empty arrays.
+
+Respond with ONLY a JSON object with exactly these fields:
+${describeSchema(schema)}`
+        },
         {
           role: 'user',
           content: input
         }
       ]
-    });
+    } as any);
+
+    const raw = completion.choices[0]?.message?.content || '{}';
+    const object = schema.parse(JSON.parse(raw));
 
     return NextResponse.json(object);
   } catch (error) {

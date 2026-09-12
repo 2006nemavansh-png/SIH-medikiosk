@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^4.0.40",
     "@supabase/supabase-js": "^2.116.0",
     "ai": "^3.4.33",
     "dotenv": "^17.4.2",

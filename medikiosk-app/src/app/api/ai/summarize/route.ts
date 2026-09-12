@@ -1,12 +1,11 @@
-import { generateText } from 'ai';
-import { createGroq } from '@ai-sdk/groq';
+import Groq from 'groq-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
     const { messages, language } = await req.json();
 
-    const systemPrompt = `You are an expert clinical summarizer. 
+    const systemPrompt = `You are an expert clinical summarizer.
 Please read the following intake conversation between a triage AI and a patient.
 Your task is to generate a concise, professional clinical summary (HPI) of the patient's symptoms based ONLY on the provided conversation.
 Include details such as:
@@ -17,15 +16,20 @@ Include details such as:
 
 Output ONLY the clinical summary text in ${language === 'hi' ? 'Hindi' : language === 'pa' ? 'Punjabi' : language === 'ta' ? 'Tamil' : 'English'}. Do not include any conversational filler.`;
 
-    const groq = createGroq({
-      apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY,
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY_SUMMARY || process.env.GROQ_API_KEY || '',
     });
 
-    const { text } = await generateText({
-      model: groq('llama-3.1-8b-instant') as any,
-      system: systemPrompt,
-      messages: messages.filter((m: any) => m.role === 'user' || m.role === 'assistant'),
-    });
+    const completion = await groq.chat.completions.create({
+      model: 'openai/gpt-oss-120b',
+      reasoning_format: 'hidden',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.filter((m: any) => m.role === 'user' || m.role === 'assistant'),
+      ],
+    } as any);
+
+    const text = completion.choices[0]?.message?.content || '';
 
     return NextResponse.json({ summary: text });
   } catch (error) {

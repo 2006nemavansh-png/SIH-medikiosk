@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateObject } from 'ai';
-import { createGroq } from '@ai-sdk/groq';
+import Groq from 'groq-sdk';
 import { z } from 'zod';
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY_INTAKE || process.env.GROQ_API_KEY || '',
+});
 
 const responseSchema = z.object({
   questionTitle: z.string(),
@@ -73,13 +76,19 @@ export async function POST(req: NextRequest) {
       If the user mentions an emergency symptom, set 'redFlagDetected' to a warning message. Otherwise, leave it null.
 
       ${langInstructions}
+
+      You must return ONLY a valid JSON object matching this schema:
+      {
+        "questionTitle": "string",
+        "questionSubtitle": "string",
+        "options": [{ "id": "string", "label": "string", "icon": "string" }],
+        "allowMultiple": boolean,
+        "isFinished": boolean,
+        "redFlagDetected": "string" | null
+      }
     `;
 
-    const groq = createGroq({
-      apiKey: process.env.GROQ_API_KEY_INTAKE || process.env.GROQ_API_KEY,
-    });
-
-    // Format messages for the ai SDK (assistant/user roles)
+    // Format messages for the Groq SDK (assistant/user roles)
     const formattedMessages: { role: 'user' | 'assistant'; content: string }[] = messages.map((m: any) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
       content: m.content
@@ -90,13 +99,18 @@ export async function POST(req: NextRequest) {
       content: 'Generate the next JSON state based on the conversation so far.'
     });
 
-    const { object } = await generateObject({
-      model: groq('llama-3.1-8b-instant') as any,
-      mode: 'json',
-      system: systemPrompt,
-      schema: responseSchema as any,
-      messages: formattedMessages
-    });
+    const completion = await groq.chat.completions.create({
+      model: 'openai/gpt-oss-120b',
+      response_format: { type: 'json_object' },
+      reasoning_format: 'hidden',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...formattedMessages
+      ]
+    } as any);
+
+    const raw = completion.choices[0]?.message?.content || '{}';
+    const object = responseSchema.parse(JSON.parse(raw));
 
     return NextResponse.json(object);
   } catch (error: any) {
