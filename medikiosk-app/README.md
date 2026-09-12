@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Required environment variables are listed in `.env.example` (Supabase, Groq, ABDM/ABHA — see that file for details). Deployed on Vercel with root directory `medikiosk-app`.
+
 ## Getting Started
 
 First, run the development server:
