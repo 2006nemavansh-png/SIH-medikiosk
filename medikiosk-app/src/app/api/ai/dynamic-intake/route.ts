@@ -115,6 +115,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(object);
   } catch (error: any) {
     console.error('Error in dynamic-intake route:', error);
+    if (error?.status === 429) {
+      return NextResponse.json(
+        { error: 'High demand right now — please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
     return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }

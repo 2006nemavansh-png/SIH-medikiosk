@@ -61,8 +61,20 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(parsedData);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in parse-document route:', error);
+    if (error?.status === 429) {
+      return NextResponse.json(
+        { error: 'High demand right now — please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
+    if (error?.status === 404) {
+      return NextResponse.json(
+        { error: 'Document scanning is temporarily unavailable (model access issue).' },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
