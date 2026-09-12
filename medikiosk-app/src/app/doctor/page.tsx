@@ -214,22 +214,6 @@ export default function DoctorDashboardPage() {
               <span className="material-symbols-outlined text-xl text-primary">clinical_notes</span>
               <span>Today&apos;s Queue</span>
             </a>
-            <a className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-label text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#">
-              <span className="material-symbols-outlined text-xl text-primary">history_edu</span>
-              <span>Patient History</span>
-            </a>
-            <a className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-label text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#">
-              <span className="material-symbols-outlined text-xl text-primary">verified_user</span>
-              <span>ABDM Records &amp; Consent</span>
-            </a>
-            <a className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-label text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#">
-              <span className="material-symbols-outlined text-xl text-primary">query_stats</span>
-              <span>Reports &amp; Analytics</span>
-            </a>
-            <a className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-label text-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#">
-              <span className="material-symbols-outlined text-xl text-primary">tune</span>
-              <span>Clinic Settings</span>
-            </a>
           </nav>
         </div>
         <div className="p-4 mx-4 mb-6 rounded-xl bg-surface-container flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
